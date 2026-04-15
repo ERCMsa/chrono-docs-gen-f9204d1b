@@ -22,7 +22,7 @@ export default function Workers() {
   const [form, setForm] = useState<WorkerInsert>({ ...emptyWorker });
   const [isDeptHead, setIsDeptHead] = useState(false);
   const [search, setSearch] = useState("");
-
+  const [importOpen, setImportOpen] = useState(false);
   const { data: workers, isLoading } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
 
   const createMutation = useMutation({
