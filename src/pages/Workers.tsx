@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, Users, Search, Shield } from "lucide-react";
+import { Plus, Trash2, Users, Search, Shield, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import ImportWorkersDialog from "@/components/ImportWorkersDialog";
 
 const emptyWorker: WorkerInsert = {
   full_name: "", phone: "", position: "", department: "", address: "", matricule: "",
@@ -21,7 +22,7 @@ export default function Workers() {
   const [form, setForm] = useState<WorkerInsert>({ ...emptyWorker });
   const [isDeptHead, setIsDeptHead] = useState(false);
   const [search, setSearch] = useState("");
-
+  const [importOpen, setImportOpen] = useState(false);
   const { data: workers, isLoading } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
 
   const createMutation = useMutation({
@@ -71,10 +72,14 @@ export default function Workers() {
           <h1 className="text-3xl font-bold tracking-tight">Employés</h1>
           <p className="text-muted-foreground mt-1">Gérez vos employés</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Ajouter</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />Importer Excel
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" />Ajouter</Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl">Nouvel employé</DialogTitle>
@@ -188,7 +193,10 @@ export default function Workers() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <ImportWorkersDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
