@@ -245,6 +245,61 @@ export default function WorkerDetail() {
         ))}
       </div>
 
+      {/* Solde acompte */}
+      <div className="bg-card border rounded-xl p-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-primary/10 text-primary"><Wallet className="w-5 h-5" /></div>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase">Solde d'acompte (dette)</p>
+            <p className="text-2xl font-bold">{fmt(Number((worker as any).current_balance ?? 0))} DA</p>
+          </div>
+        </div>
+        <Link to="/acomptes"><Button variant="outline" size="sm"><Wallet className="w-4 h-4 mr-2" />Nouvel acompte</Button></Link>
+      </div>
+
+      {/* Historique acomptes */}
+      {acomptes && acomptes.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Historique acomptes ({acomptes.length})</h2>
+          <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left text-sm text-muted-foreground">
+                  <th className="p-4 font-medium">Date</th>
+                  <th className="p-4 font-medium">Type</th>
+                  <th className="p-4 font-medium text-right">Montant</th>
+                  <th className="p-4 font-medium text-right">Avant</th>
+                  <th className="p-4 font-medium text-right">Après</th>
+                  <th className="p-4 font-medium">Note</th>
+                  <th className="p-4 font-medium text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acomptes.map((t) => (
+                  <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="p-4 text-sm">{new Date(t.transaction_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4">
+                      {t.type === "add" ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600"><TrendingUp className="w-3 h-3" />Avance</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600"><TrendingDown className="w-3 h-3" />Remb.</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right font-semibold">{fmt(Number(t.amount))} DA</td>
+                    <td className="p-4 text-right text-sm text-muted-foreground">{fmt(Number(t.previous_balance))}</td>
+                    <td className="p-4 text-right text-sm font-medium">{fmt(Number(t.new_balance))}</td>
+                    <td className="p-4 text-sm text-muted-foreground max-w-[200px] truncate">{t.note ?? "—"}</td>
+                    <td className="p-4 text-right">
+                      <Link to={`/acomptes/${t.id}`}><Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button></Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-lg font-semibold mb-3">Documents ({documents?.length ?? 0})</h2>
         {loadingDocs ? (
