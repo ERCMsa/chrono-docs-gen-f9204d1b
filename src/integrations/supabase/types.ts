@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      acompte_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          new_balance: number
+          note: string | null
+          previous_balance: number
+          transaction_date: string
+          type: string
+          worker_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          new_balance: number
+          note?: string | null
+          previous_balance: number
+          transaction_date?: string
+          type: string
+          worker_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          new_balance?: number
+          note?: string | null
+          previous_balance?: number
+          transaction_date?: string
+          type?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acompte_transactions_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           content: Json
@@ -76,6 +120,7 @@ export type Database = {
           address: string | null
           cin: string | null
           created_at: string
+          current_balance: number
           date_naissance: string | null
           department: string | null
           full_name: string
@@ -97,6 +142,7 @@ export type Database = {
           address?: string | null
           cin?: string | null
           created_at?: string
+          current_balance?: number
           date_naissance?: string | null
           department?: string | null
           full_name: string
@@ -118,6 +164,7 @@ export type Database = {
           address?: string | null
           cin?: string | null
           created_at?: string
+          current_balance?: number
           date_naissance?: string | null
           department?: string | null
           full_name?: string
