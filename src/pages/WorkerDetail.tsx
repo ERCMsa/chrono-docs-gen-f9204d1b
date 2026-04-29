@@ -1,14 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWorker, getDocumentsByWorker, updateWorker, getAcomptes, DOCUMENT_TYPES, type WorkerInsert } from "@/lib/supabase-helpers";
+import { getWorker, getDocumentsByWorker, updateWorker, getAcomptes, getAbsences, getConges, congeDuration, CONGE_TYPES, DOCUMENT_TYPES, type WorkerInsert } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, FileText, Users, Shield, CheckCircle, Clock, Pencil, Wallet, TrendingUp, TrendingDown, Eye } from "lucide-react";
+import { ArrowLeft, FileText, Users, Shield, CheckCircle, Clock, Pencil, Wallet, TrendingUp, TrendingDown, Eye, CalendarX, CalendarRange } from "lucide-react";
 import { toast } from "sonner";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(n);
@@ -33,6 +33,18 @@ export default function WorkerDetail() {
   const { data: acomptes } = useQuery({
     queryKey: ["worker-acomptes", id],
     queryFn: () => getAcomptes(id!),
+    enabled: !!id,
+  });
+
+  const { data: absences } = useQuery({
+    queryKey: ["worker-absences", id],
+    queryFn: () => getAbsences(id!),
+    enabled: !!id,
+  });
+
+  const { data: conges } = useQuery({
+    queryKey: ["worker-conges", id],
+    queryFn: () => getConges(id!),
     enabled: !!id,
   });
 
@@ -299,6 +311,76 @@ export default function WorkerDetail() {
           </div>
         </div>
       )}
+
+      {/* Absences */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2"><CalendarX className="w-5 h-5 text-primary" />Absences ({absences?.length ?? 0})</h2>
+          <Link to="/absences"><Button variant="outline" size="sm">Gérer</Button></Link>
+        </div>
+        {absences && absences.length > 0 ? (
+          <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left text-sm text-muted-foreground">
+                  <th className="p-4 font-medium">Date</th>
+                  <th className="p-4 font-medium">Motif</th>
+                </tr>
+              </thead>
+              <tbody>
+                {absences.map((a) => (
+                  <tr key={a.id} className="border-b last:border-0">
+                    <td className="p-4 text-sm">{new Date(a.absence_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm text-muted-foreground">{a.reason ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-6 bg-card rounded-xl border">
+            <p className="text-sm text-muted-foreground">Aucune absence enregistrée</p>
+          </div>
+        )}
+      </div>
+
+      {/* Congés */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2"><CalendarRange className="w-5 h-5 text-primary" />Congés ({conges?.length ?? 0})</h2>
+          <Link to="/conges"><Button variant="outline" size="sm">Gérer</Button></Link>
+        </div>
+        {conges && conges.length > 0 ? (
+          <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left text-sm text-muted-foreground">
+                  <th className="p-4 font-medium">Type</th>
+                  <th className="p-4 font-medium">Du</th>
+                  <th className="p-4 font-medium">Au</th>
+                  <th className="p-4 font-medium text-right">Durée</th>
+                  <th className="p-4 font-medium">Motif</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conges.map((c) => (
+                  <tr key={c.id} className="border-b last:border-0">
+                    <td className="p-4 text-sm font-medium">{CONGE_TYPES[c.conge_type]}</td>
+                    <td className="p-4 text-sm">{new Date(c.start_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm">{new Date(c.end_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm text-right font-semibold">{congeDuration(c.start_date, c.end_date)} j</td>
+                    <td className="p-4 text-sm text-muted-foreground max-w-[250px] truncate">{c.reason ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-6 bg-card rounded-xl border">
+            <p className="text-sm text-muted-foreground">Aucun congé enregistré</p>
+          </div>
+        )}
+      </div>
 
       <div>
         <h2 className="text-lg font-semibold mb-3">Documents ({documents?.length ?? 0})</h2>

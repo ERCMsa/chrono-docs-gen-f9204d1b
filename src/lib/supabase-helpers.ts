@@ -141,6 +141,118 @@ export async function deleteAcompte(id: string) {
   await supabase.from("workers").update({ current_balance: Math.max(0, reverted) } as any).eq("id", t.worker_id);
 }
 
+// ===== Absences =====
+export type Absence = {
+  id: string;
+  worker_id: string;
+  absence_date: string;
+  reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AbsenceWithWorker = Absence & {
+  workers?: { full_name: string; matricule: string | null; department: string | null } | null;
+};
+
+export async function getAbsences(workerId?: string) {
+  let q = (supabase as any).from("absences").select("*, workers(full_name, matricule, department)").order("absence_date", { ascending: false });
+  if (workerId) q = q.eq("worker_id", workerId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data as AbsenceWithWorker[];
+}
+
+export async function createAbsence(params: { worker_id: string; absence_date: string; reason?: string }) {
+  const { data, error } = await (supabase as any).from("absences").insert({
+    worker_id: params.worker_id,
+    absence_date: params.absence_date,
+    reason: params.reason ?? null,
+  }).select().single();
+  if (error) throw error;
+  return data as Absence;
+}
+
+export async function updateAbsence(id: string, params: { absence_date?: string; reason?: string | null }) {
+  const { data, error } = await (supabase as any).from("absences").update(params).eq("id", id).select().single();
+  if (error) throw error;
+  return data as Absence;
+}
+
+export async function deleteAbsence(id: string) {
+  const { error } = await (supabase as any).from("absences").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ===== Congés =====
+export const CONGE_TYPES = {
+  annual: "Congé annuel",
+  sick: "Congé maladie",
+  unpaid: "Congé sans solde",
+  maternity: "Congé maternité",
+  paternity: "Congé paternité",
+  exceptional: "Congé exceptionnel",
+} as const;
+export type CongeType = keyof typeof CONGE_TYPES;
+
+export type Conge = {
+  id: string;
+  worker_id: string;
+  start_date: string;
+  end_date: string;
+  conge_type: CongeType;
+  reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CongeWithWorker = Conge & {
+  workers?: { full_name: string; matricule: string | null; department: string | null } | null;
+};
+
+export function congeDuration(start: string, end: string): number {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.floor((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+export async function getConges(workerId?: string) {
+  let q = (supabase as any).from("conges").select("*, workers(full_name, matricule, department)").order("start_date", { ascending: false });
+  if (workerId) q = q.eq("worker_id", workerId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data as CongeWithWorker[];
+}
+
+export async function createConge(params: { worker_id: string; start_date: string; end_date: string; conge_type: CongeType; reason?: string }) {
+  if (new Date(params.end_date) < new Date(params.start_date)) {
+    throw new Error("La date de fin doit être après la date de début");
+  }
+  const { data, error } = await (supabase as any).from("conges").insert({
+    worker_id: params.worker_id,
+    start_date: params.start_date,
+    end_date: params.end_date,
+    conge_type: params.conge_type,
+    reason: params.reason ?? null,
+  }).select().single();
+  if (error) throw error;
+  return data as Conge;
+}
+
+export async function updateConge(id: string, params: Partial<{ start_date: string; end_date: string; conge_type: CongeType; reason: string | null }>) {
+  if (params.start_date && params.end_date && new Date(params.end_date) < new Date(params.start_date)) {
+    throw new Error("La date de fin doit être après la date de début");
+  }
+  const { data, error } = await (supabase as any).from("conges").update(params).eq("id", id).select().single();
+  if (error) throw error;
+  return data as Conge;
+}
+
+export async function deleteConge(id: string) {
+  const { error } = await (supabase as any).from("conges").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export const DOCUMENT_TYPES = {
   contract: { label: "Contrat de travail", icon: "FileText" },
   bon_sortie: { label: "Bon de sortie", icon: "LogOut" },
