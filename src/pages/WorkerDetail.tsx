@@ -167,6 +167,9 @@ export default function WorkerDetail() {
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="outline" onClick={() => setRenewOpen(true)}><RefreshCw className="w-4 h-4 mr-2" />Renouveler le contrat</Button>
+        <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="w-4 h-4 mr-2" />Supprimer l'employé</Button>
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={openEdit}><Pencil className="w-4 h-4 mr-2" />Modifier</Button>
