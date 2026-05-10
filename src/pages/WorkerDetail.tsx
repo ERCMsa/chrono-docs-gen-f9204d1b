@@ -287,7 +287,80 @@ export default function WorkerDetail() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Renew Contract Dialog */}
+      <Dialog open={renewOpen} onOpenChange={setRenewOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Renouveler le contrat</DialogTitle>
+            <DialogDescription>
+              Sélectionnez la nouvelle durée. Le contrat débutera aujourd'hui.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Durée</Label>
+            <Select value={renewDuration} onValueChange={setRenewDuration}>
+              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONTRACT_DURATIONS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-sm">
+              Du <span className="font-semibold">{formatDateFR(new Date().toISOString().slice(0,10))}</span>
+              {" → "}
+              au <span className="font-semibold">{formatDateFR(computeEndDate(new Date().toISOString().slice(0,10), renewDuration))}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewOpen(false)}>Annuler</Button>
+            <Button onClick={() => renewMutation.mutate()} disabled={renewMutation.isPending}>
+              {renewMutation.isPending ? "..." : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet employé ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Contract status banner */}
+      {contractStatus.kind === "expired" && (
+        <div className="rounded-xl border-2 border-red-900/40 bg-red-900/10 p-4 flex items-center gap-3">
+          <XCircle className="w-5 h-5 text-red-900 dark:text-red-300 shrink-0" />
+          <div>
+            <p className="font-semibold text-red-900 dark:text-red-300">Contrat expiré</p>
+            <p className="text-sm text-red-900/80 dark:text-red-300/80">Expiré depuis le {formatDateFR(contractStatus.endDate)} ({contractStatus.daysOver} jour{contractStatus.daysOver > 1 ? "s" : ""}).</p>
+          </div>
+        </div>
+      )}
+      {contractStatus.kind === "expiring" && (
+        <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
+          <p className="font-semibold text-destructive">
+            Contrat bientôt expiré — à renouveler avant le {formatDateFR(contractStatus.endDate)}
+          </p>
+        </div>
+      )}
 
       <div className="bg-card border rounded-xl p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
@@ -305,6 +378,9 @@ export default function WorkerDetail() {
           ["N° Compte", (worker as any).numero_compte],
           ["Acte de naissance", (worker as any).acte_naissance],
           ["Responsable", worker.is_department_head ? "Oui" : "Non"],
+          ["Durée contrat", durationLabel((worker as any).duree_contrat)],
+          ["Début contrat", (worker as any).date_debut_contrat ? formatDateFR((worker as any).date_debut_contrat) : null],
+          ["Fin contrat", (worker as any).date_fin_contrat ? formatDateFR((worker as any).date_fin_contrat) : null],
         ].map(([label, value]) => (
           <div key={label as string}>
             <p className="text-xs text-muted-foreground">{label as string}</p>
@@ -312,6 +388,7 @@ export default function WorkerDetail() {
           </div>
         ))}
       </div>
+
 
       {/* Solde acompte */}
       <div className="bg-card border rounded-xl p-5 flex items-center justify-between">
