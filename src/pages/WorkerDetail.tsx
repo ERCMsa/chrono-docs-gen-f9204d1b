@@ -1,22 +1,29 @@
-import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWorker, getDocumentsByWorker, updateWorker, getAcomptes, getAbsences, getConges, congeDuration, CONGE_TYPES, DOCUMENT_TYPES, type WorkerInsert } from "@/lib/supabase-helpers";
+import { getWorker, getDocumentsByWorker, updateWorker, deleteWorker, getAcomptes, getAbsences, getConges, congeDuration, CONGE_TYPES, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, FileText, Users, Shield, CheckCircle, Clock, Pencil, Wallet, TrendingUp, TrendingDown, Eye, CalendarX, CalendarRange } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ArrowLeft, FileText, Users, Shield, CheckCircle, Clock, Pencil, Wallet, TrendingUp, TrendingDown, Eye, CalendarX, CalendarRange, Trash2, RefreshCw, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { CONTRACT_DURATIONS, computeEndDate, getContractStatus, formatDateFR, durationLabel } from "@/lib/contract-utils";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(n);
 
 export default function WorkerDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [renewOpen, setRenewOpen] = useState(false);
+  const [renewDuration, setRenewDuration] = useState<string>("1_an");
 
   const { data: worker, isLoading: loadingWorker } = useQuery({
     queryKey: ["worker", id],
@@ -68,13 +75,33 @@ export default function WorkerDetail() {
       numero_social: (worker as any).numero_social ?? "",
       numero_compte: (worker as any).numero_compte ?? "",
       acte_naissance: (worker as any).acte_naissance ?? "",
+      duree_contrat: (worker as any).duree_contrat ?? "",
+      date_debut_contrat: (worker as any).date_debut_contrat ?? "",
     });
     setIsDeptHead(worker.is_department_head ?? false);
     setEditOpen(true);
   };
 
+  useEffect(() => {
+    if (searchParams.get("edit") === "1" && worker && !editOpen) {
+      openEdit();
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [worker]);
+
   const editMutation = useMutation({
-    mutationFn: () => updateWorker(id!, { ...editForm, is_department_head: isDeptHead } as any),
+    mutationFn: () => {
+      const payload: any = { ...editForm, is_department_head: isDeptHead };
+      if (payload.duree_contrat && payload.date_debut_contrat) {
+        payload.date_fin_contrat = computeEndDate(payload.date_debut_contrat, payload.duree_contrat);
+      } else {
+        payload.date_fin_contrat = null;
+      }
+      return updateWorker(id!, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["worker", id] });
       queryClient.invalidateQueries({ queryKey: ["workers"] });
@@ -82,6 +109,31 @@ export default function WorkerDetail() {
       toast.success("Employé mis à jour");
     },
     onError: () => toast.error("Erreur lors de la mise à jour"),
+  });
+
+  const renewMutation = useMutation({
+    mutationFn: () => {
+      const start = new Date().toISOString().slice(0, 10);
+      const end = computeEndDate(start, renewDuration);
+      return updateWorker(id!, { duree_contrat: renewDuration, date_debut_contrat: start, date_fin_contrat: end } as any);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["worker", id] });
+      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      setRenewOpen(false);
+      toast.success("Contrat renouvelé");
+    },
+    onError: () => toast.error("Erreur lors du renouvellement"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteWorker(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      toast.success("Employé supprimé");
+      navigate("/workers");
+    },
+    onError: () => toast.error("Erreur lors de la suppression"),
   });
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -94,6 +146,7 @@ export default function WorkerDetail() {
   if (!worker) return <p className="text-destructive">Employé introuvable</p>;
 
   const isBon = (type: string) => type === "bon_sortie" || type === "bon_rentree";
+  const contractStatus = getContractStatus((worker as any).date_fin_contrat);
 
   return (
     <div className="space-y-6">
@@ -114,6 +167,9 @@ export default function WorkerDetail() {
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="outline" onClick={() => setRenewOpen(true)}><RefreshCw className="w-4 h-4 mr-2" />Renouveler le contrat</Button>
+        <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="w-4 h-4 mr-2" />Supprimer l'employé</Button>
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={openEdit}><Pencil className="w-4 h-4 mr-2" />Modifier</Button>
@@ -215,6 +271,30 @@ export default function WorkerDetail() {
                 </div>
               </div>
 
+              {/* Contrat */}
+              <div>
+                <h3 className="text-sm font-semibold text-primary mb-3">Contrat</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Durée</Label>
+                    <Select value={editForm.duree_contrat ?? ""} onValueChange={(v) => setEditForm((p) => ({ ...p, duree_contrat: v }))}>
+                      <SelectTrigger className="h-11"><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_DURATIONS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date début</Label>
+                    <Input type="date" value={editForm.date_debut_contrat ?? ""} onChange={(e) => setEditForm((p) => ({ ...p, date_debut_contrat: e.target.value }))} className="h-11" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date fin (auto)</Label>
+                    <Input type="date" disabled value={(editForm.duree_contrat && editForm.date_debut_contrat) ? computeEndDate(editForm.date_debut_contrat, editForm.duree_contrat) : ""} className="h-11" />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                 <Switch checked={isDeptHead} onCheckedChange={setIsDeptHead} />
                 <div>
@@ -231,7 +311,80 @@ export default function WorkerDetail() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Renew Contract Dialog */}
+      <Dialog open={renewOpen} onOpenChange={setRenewOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Renouveler le contrat</DialogTitle>
+            <DialogDescription>
+              Sélectionnez la nouvelle durée. Le contrat débutera aujourd'hui.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Durée</Label>
+            <Select value={renewDuration} onValueChange={setRenewDuration}>
+              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONTRACT_DURATIONS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-sm">
+              Du <span className="font-semibold">{formatDateFR(new Date().toISOString().slice(0,10))}</span>
+              {" → "}
+              au <span className="font-semibold">{formatDateFR(computeEndDate(new Date().toISOString().slice(0,10), renewDuration))}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewOpen(false)}>Annuler</Button>
+            <Button onClick={() => renewMutation.mutate()} disabled={renewMutation.isPending}>
+              {renewMutation.isPending ? "..." : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet employé ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Contract status banner */}
+      {contractStatus.kind === "expired" && (
+        <div className="rounded-xl border-2 border-red-900/40 bg-red-900/10 p-4 flex items-center gap-3">
+          <XCircle className="w-5 h-5 text-red-900 dark:text-red-300 shrink-0" />
+          <div>
+            <p className="font-semibold text-red-900 dark:text-red-300">Contrat expiré</p>
+            <p className="text-sm text-red-900/80 dark:text-red-300/80">Expiré depuis le {formatDateFR(contractStatus.endDate)} ({contractStatus.daysOver} jour{contractStatus.daysOver > 1 ? "s" : ""}).</p>
+          </div>
+        </div>
+      )}
+      {contractStatus.kind === "expiring" && (
+        <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
+          <p className="font-semibold text-destructive">
+            Contrat bientôt expiré — à renouveler avant le {formatDateFR(contractStatus.endDate)}
+          </p>
+        </div>
+      )}
 
       <div className="bg-card border rounded-xl p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
@@ -249,6 +402,9 @@ export default function WorkerDetail() {
           ["N° Compte", (worker as any).numero_compte],
           ["Acte de naissance", (worker as any).acte_naissance],
           ["Responsable", worker.is_department_head ? "Oui" : "Non"],
+          ["Durée contrat", durationLabel((worker as any).duree_contrat)],
+          ["Début contrat", (worker as any).date_debut_contrat ? formatDateFR((worker as any).date_debut_contrat) : null],
+          ["Fin contrat", (worker as any).date_fin_contrat ? formatDateFR((worker as any).date_fin_contrat) : null],
         ].map(([label, value]) => (
           <div key={label as string}>
             <p className="text-xs text-muted-foreground">{label as string}</p>
@@ -256,6 +412,7 @@ export default function WorkerDetail() {
           </div>
         ))}
       </div>
+
 
       {/* Solde acompte */}
       <div className="bg-card border rounded-xl p-5 flex items-center justify-between">
