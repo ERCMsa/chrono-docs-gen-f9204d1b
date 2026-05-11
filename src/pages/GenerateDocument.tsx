@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getWorkers, createDocument, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
@@ -7,25 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Save, Printer } from "lucide-react";
+import { Download, Save, Printer, Plus } from "lucide-react";
 import { toast } from "sonner";
 import DocumentPreview from "@/components/DocumentPreview";
 import ContractPreview from "@/components/ContractPreview";
+import AvenantPreview, { AvenantData, EMPTY_AVENANT } from "@/components/AvenantPreview";
 import { WILAYAS_DATA, getCommunesByWilaya } from "@/data/wilayas";
+import { DUREE_OPTIONS, dureeArabicLabel, computeContractEnd } from "@/lib/contract-helpers";
 
 type DocType = keyof typeof DOCUMENT_TYPES;
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const nowTime = () => new Date().toTimeString().slice(0, 5);
-
-function calcEndDate(startDate: string): string {
-  if (!startDate) return "";
-  const d = new Date(startDate);
-  d.setFullYear(d.getFullYear() + 1);
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
 
 const getDefaultValues = (docType: DocType): Record<string, string> => {
   const year = new Date().getFullYear();
@@ -34,9 +29,11 @@ const getDefaultValues = (docType: DocType): Record<string, string> => {
       return {
         num_contrat: `001/${year}`,
         date_debut: todayStr(),
-        date_fin: calcEndDate(todayStr()),
+        duree_mois: "12",
+        date_fin: computeContractEnd(todayStr(), 12),
         date_sign: todayStr(),
         lieu_sign: "أولاد موسى",
+        periode_essai: "true",
       };
     case "bon_sortie":
       return { sortie_date: todayStr(), sortie_time: nowTime() };
@@ -147,19 +144,31 @@ function ContractForm({ formData, setFormData, worker }: {
     }
   }, [worker?.id]);
 
-  // Auto-calculate end date
+  // Auto-calculate end date when start date or duration changes
   useEffect(() => {
+    const m = parseInt(formData.duree_mois || "12", 10) || 12;
     if (formData.date_debut) {
-      const end = calcEndDate(formData.date_debut);
-      setFormData(p => ({ ...p, date_fin: end }));
+      const end = computeContractEnd(formData.date_debut, m);
+      setFormData(p => (p.date_fin === end ? p : { ...p, date_fin: end }));
     }
-  }, [formData.date_debut]);
+  }, [formData.date_debut, formData.duree_mois]);
 
   return (
     <div className="space-y-4">
       <SectionHeader>1. معلومات العقد (Informations Contrat)</SectionHeader>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {inp("num_contrat", "رقم العقد (N° Contrat)", { placeholder: "ex: 007/2024" })}
+        <div>
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">مدة العقد (Durée)</Label>
+          <Select value={formData.duree_mois ?? "12"} onValueChange={set("duree_mois")}>
+            <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {DUREE_OPTIONS.map((m) => (
+                <SelectItem key={m} value={String(m)}>{dureeArabicLabel(m)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {inp("date_debut", "تاريخ بداية العقد (Date Début)", { type: "date" })}
         {inp("date_fin", "تاريخ نهاية العقد (Date Fin)", { type: "date" })}
       </div>
@@ -168,6 +177,15 @@ function ContractForm({ formData, setFormData, worker }: {
         {inp("lieu_sign", "مكان التحرير (Lieu de signature)", { placeholder: "أولاد موسى" })}
         {inp("date_sign", "تاريخ التحرير (Date de signature)", { type: "date" })}
       </div>
+      <label className="flex items-center gap-3 cursor-pointer p-3 border border-input rounded-md bg-muted/30 hover:bg-accent/30 transition-colors">
+        <Checkbox
+          checked={formData.periode_essai !== "false"}
+          onCheckedChange={(v) => set("periode_essai")(v ? "true" : "false")}
+        />
+        <span className="font-semibold text-sm">
+          تطبيق المدة التجريبية (3 أشهر) — Appliquer la période d'essai (3 mois)
+        </span>
+      </label>
 
       <SectionHeader>2. معلومات العامل (Informations Salarié)</SectionHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -211,6 +229,44 @@ export default function GenerateDocument() {
 
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
+  const [lang, setLang] = useState<"ar" | "fr">("ar");
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
+  const [showAvenant, setShowAvenant] = useState(false);
+  const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
+  const avenantRef = useRef<HTMLDivElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoDataUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const updateAvenant = <K extends keyof AvenantData>(field: K, value: AvenantData[K]) => {
+    setAvenant((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "salBase") {
+        const base = parseFloat(value as string) || 0;
+        const risque = base * 0.1;
+        next.primeRisque = risque ? risque.toFixed(2) : "";
+        next.salPoste = base ? (base + risque).toFixed(2) : "";
+      }
+      return next;
+    });
+  };
+
+  const openAvenant = () => {
+    setAvenant((prev) => ({
+      ...prev,
+      numContratRef: prev.numContratRef || formData.num_contrat || "",
+      salBase: prev.salBase || formData.sal_base || "",
+      salNetFinal: prev.salNetFinal || formData.sal_net || "",
+      dateSign: prev.dateSign || formData.date_sign || "",
+    }));
+    setShowAvenant(true);
+    setTimeout(() => avenantRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   const { data: workers } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
   const selectedWorker = workers?.find((w) => w.id === workerId);
@@ -267,9 +323,22 @@ export default function GenerateDocument() {
         /* Contract: full-width form then full-width preview */
         <div className="space-y-6">
           <div className="bg-card border rounded-xl p-6 space-y-6">
+            {/* Lang switch + Logo */}
+            <div className="flex flex-wrap items-end gap-4 justify-between border-b border-border pb-4">
+              <div className="flex gap-2">
+                <Button type="button" variant={lang === "ar" ? "default" : "outline"} size="sm" onClick={() => setLang("ar")}>عربي</Button>
+                <Button type="button" variant={lang === "fr" ? "default" : "outline"} size="sm" onClick={() => setLang("fr")}>Français</Button>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Logo (optionnel)</Label>
+                <Input type="file" accept="image/*" onChange={handleLogoUpload} className="h-10 max-w-xs" />
+              </div>
+            </div>
+
             <ContractForm formData={formData} setFormData={setFormData} worker={selectedWorker} />
-            <div className="flex gap-3 pt-2 border-t border-border">
-              <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1">
+
+            <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+              <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1 min-w-[160px]">
                 <Save className="w-4 h-4 mr-2" />{saveMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
               </Button>
               <Button onClick={() => window.print()} variant="outline" disabled={!workerId}>
@@ -278,12 +347,53 @@ export default function GenerateDocument() {
               <Button onClick={handleDownloadPdf} variant="outline" disabled={!workerId}>
                 <Download className="w-4 h-4 mr-2" />PDF
               </Button>
+              <Button onClick={openAvenant} variant="secondary" disabled={!workerId}>
+                <Plus className="w-4 h-4 mr-2" />Avenant
+              </Button>
             </div>
+
+            {/* Avenant inline form */}
+            {showAvenant && (
+              <div className="mt-4 p-4 border-2 border-primary/40 rounded-lg bg-accent/20 space-y-4">
+                <h3 className="text-center font-bold text-lg">📎 ملحق رقم {avenant.numAvenant} - تفصيل الأجر</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">رقم الملحق</Label>
+                    <Input value={avenant.numAvenant} onChange={(e) => updateAvenant("numAvenant", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">رقم العقد المرجعي</Label>
+                    <Input value={avenant.numContratRef} onChange={(e) => updateAvenant("numContratRef", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">تاريخ التحرير</Label>
+                    <Input type="date" value={avenant.dateSign} onChange={(e) => updateAvenant("dateSign", e.target.value)} className="h-11" /></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">الأجر القاعدي (DA)</Label>
+                    <Input value={avenant.salBase} onChange={(e) => updateAvenant("salBase", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">علاوة الخطر 10% (DA)</Label>
+                    <Input value={avenant.primeRisque} onChange={(e) => updateAvenant("primeRisque", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">أجر المنصب (DA)</Label>
+                    <Input value={avenant.salPoste} onChange={(e) => updateAvenant("salPoste", e.target.value)} className="h-11" /></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">منحة النقل (DA)</Label>
+                    <Input value={avenant.primeTransport} onChange={(e) => updateAvenant("primeTransport", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">منحة السلة (DA)</Label>
+                    <Input value={avenant.primePanier} onChange={(e) => updateAvenant("primePanier", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">الأجر الصافي النهائي (DA)</Label>
+                    <Input value={avenant.salNetFinal} onChange={(e) => updateAvenant("salNetFinal", e.target.value)} className="h-11" /></div>
+                </div>
+                <Button type="button" variant="outline" onClick={() => setShowAvenant(false)} size="sm">Masquer le ملحق</Button>
+              </div>
+            )}
           </div>
 
           {selectedWorker && (
             <div id="document-preview">
-              <ContractPreview worker={selectedWorker} data={formData} />
+              <ContractPreview worker={selectedWorker} data={formData} lang={lang} logoDataUrl={logoDataUrl} />
+            </div>
+          )}
+
+          {selectedWorker && showAvenant && (
+            <div ref={avenantRef}>
+              <AvenantPreview worker={selectedWorker} avenant={avenant} contractData={formData} logoDataUrl={logoDataUrl} />
             </div>
           )}
         </div>
