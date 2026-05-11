@@ -229,6 +229,44 @@ export default function GenerateDocument() {
 
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
+  const [lang, setLang] = useState<"ar" | "fr">("ar");
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
+  const [showAvenant, setShowAvenant] = useState(false);
+  const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
+  const avenantRef = useRef<HTMLDivElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoDataUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const updateAvenant = <K extends keyof AvenantData>(field: K, value: AvenantData[K]) => {
+    setAvenant((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "salBase") {
+        const base = parseFloat(value as string) || 0;
+        const risque = base * 0.1;
+        next.primeRisque = risque ? risque.toFixed(2) : "";
+        next.salPoste = base ? (base + risque).toFixed(2) : "";
+      }
+      return next;
+    });
+  };
+
+  const openAvenant = () => {
+    setAvenant((prev) => ({
+      ...prev,
+      numContratRef: prev.numContratRef || formData.num_contrat || "",
+      salBase: prev.salBase || formData.sal_base || "",
+      salNetFinal: prev.salNetFinal || formData.sal_net || "",
+      dateSign: prev.dateSign || formData.date_sign || "",
+    }));
+    setShowAvenant(true);
+    setTimeout(() => avenantRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   const { data: workers } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
   const selectedWorker = workers?.find((w) => w.id === workerId);
