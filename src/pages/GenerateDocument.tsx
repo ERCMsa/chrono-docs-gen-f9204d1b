@@ -156,8 +156,19 @@ function ContractForm({ formData, setFormData, worker }: {
   return (
     <div className="space-y-4">
       <SectionHeader>1. معلومات العقد (Informations Contrat)</SectionHeader>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {inp("num_contrat", "رقم العقد (N° Contrat)", { placeholder: "ex: 007/2024" })}
+        <div>
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">مدة العقد (Durée)</Label>
+          <Select value={formData.duree_mois ?? "12"} onValueChange={set("duree_mois")}>
+            <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {DUREE_OPTIONS.map((m) => (
+                <SelectItem key={m} value={String(m)}>{dureeArabicLabel(m)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {inp("date_debut", "تاريخ بداية العقد (Date Début)", { type: "date" })}
         {inp("date_fin", "تاريخ نهاية العقد (Date Fin)", { type: "date" })}
       </div>
@@ -166,6 +177,15 @@ function ContractForm({ formData, setFormData, worker }: {
         {inp("lieu_sign", "مكان التحرير (Lieu de signature)", { placeholder: "أولاد موسى" })}
         {inp("date_sign", "تاريخ التحرير (Date de signature)", { type: "date" })}
       </div>
+      <label className="flex items-center gap-3 cursor-pointer p-3 border border-input rounded-md bg-muted/30 hover:bg-accent/30 transition-colors">
+        <Checkbox
+          checked={formData.periode_essai !== "false"}
+          onCheckedChange={(v) => set("periode_essai")(v ? "true" : "false")}
+        />
+        <span className="font-semibold text-sm">
+          تطبيق المدة التجريبية (3 أشهر) — Appliquer la période d'essai (3 mois)
+        </span>
+      </label>
 
       <SectionHeader>2. معلومات العامل (Informations Salarié)</SectionHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
