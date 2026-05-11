@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getWorkers, createDocument, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
@@ -7,25 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Save, Printer } from "lucide-react";
+import { Download, Save, Printer, Plus } from "lucide-react";
 import { toast } from "sonner";
 import DocumentPreview from "@/components/DocumentPreview";
 import ContractPreview from "@/components/ContractPreview";
+import AvenantPreview, { AvenantData, EMPTY_AVENANT } from "@/components/AvenantPreview";
 import { WILAYAS_DATA, getCommunesByWilaya } from "@/data/wilayas";
+import { DUREE_OPTIONS, dureeArabicLabel, computeContractEnd } from "@/lib/contract-helpers";
 
 type DocType = keyof typeof DOCUMENT_TYPES;
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const nowTime = () => new Date().toTimeString().slice(0, 5);
-
-function calcEndDate(startDate: string): string {
-  if (!startDate) return "";
-  const d = new Date(startDate);
-  d.setFullYear(d.getFullYear() + 1);
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
 
 const getDefaultValues = (docType: DocType): Record<string, string> => {
   const year = new Date().getFullYear();
@@ -34,9 +29,11 @@ const getDefaultValues = (docType: DocType): Record<string, string> => {
       return {
         num_contrat: `001/${year}`,
         date_debut: todayStr(),
-        date_fin: calcEndDate(todayStr()),
+        duree_mois: "12",
+        date_fin: computeContractEnd(todayStr(), 12),
         date_sign: todayStr(),
         lieu_sign: "أولاد موسى",
+        periode_essai: "true",
       };
     case "bon_sortie":
       return { sortie_date: todayStr(), sortie_time: nowTime() };
