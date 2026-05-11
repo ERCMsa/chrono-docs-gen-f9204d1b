@@ -323,9 +323,22 @@ export default function GenerateDocument() {
         /* Contract: full-width form then full-width preview */
         <div className="space-y-6">
           <div className="bg-card border rounded-xl p-6 space-y-6">
+            {/* Lang switch + Logo */}
+            <div className="flex flex-wrap items-end gap-4 justify-between border-b border-border pb-4">
+              <div className="flex gap-2">
+                <Button type="button" variant={lang === "ar" ? "default" : "outline"} size="sm" onClick={() => setLang("ar")}>عربي</Button>
+                <Button type="button" variant={lang === "fr" ? "default" : "outline"} size="sm" onClick={() => setLang("fr")}>Français</Button>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Logo (optionnel)</Label>
+                <Input type="file" accept="image/*" onChange={handleLogoUpload} className="h-10 max-w-xs" />
+              </div>
+            </div>
+
             <ContractForm formData={formData} setFormData={setFormData} worker={selectedWorker} />
-            <div className="flex gap-3 pt-2 border-t border-border">
-              <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1">
+
+            <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+              <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1 min-w-[160px]">
                 <Save className="w-4 h-4 mr-2" />{saveMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
               </Button>
               <Button onClick={() => window.print()} variant="outline" disabled={!workerId}>
@@ -334,12 +347,53 @@ export default function GenerateDocument() {
               <Button onClick={handleDownloadPdf} variant="outline" disabled={!workerId}>
                 <Download className="w-4 h-4 mr-2" />PDF
               </Button>
+              <Button onClick={openAvenant} variant="secondary" disabled={!workerId}>
+                <Plus className="w-4 h-4 mr-2" />Avenant
+              </Button>
             </div>
+
+            {/* Avenant inline form */}
+            {showAvenant && (
+              <div className="mt-4 p-4 border-2 border-primary/40 rounded-lg bg-accent/20 space-y-4">
+                <h3 className="text-center font-bold text-lg">📎 ملحق رقم {avenant.numAvenant} - تفصيل الأجر</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">رقم الملحق</Label>
+                    <Input value={avenant.numAvenant} onChange={(e) => updateAvenant("numAvenant", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">رقم العقد المرجعي</Label>
+                    <Input value={avenant.numContratRef} onChange={(e) => updateAvenant("numContratRef", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">تاريخ التحرير</Label>
+                    <Input type="date" value={avenant.dateSign} onChange={(e) => updateAvenant("dateSign", e.target.value)} className="h-11" /></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">الأجر القاعدي (DA)</Label>
+                    <Input value={avenant.salBase} onChange={(e) => updateAvenant("salBase", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">علاوة الخطر 10% (DA)</Label>
+                    <Input value={avenant.primeRisque} onChange={(e) => updateAvenant("primeRisque", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">أجر المنصب (DA)</Label>
+                    <Input value={avenant.salPoste} onChange={(e) => updateAvenant("salPoste", e.target.value)} className="h-11" /></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">منحة النقل (DA)</Label>
+                    <Input value={avenant.primeTransport} onChange={(e) => updateAvenant("primeTransport", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">منحة السلة (DA)</Label>
+                    <Input value={avenant.primePanier} onChange={(e) => updateAvenant("primePanier", e.target.value)} className="h-11" /></div>
+                  <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">الأجر الصافي النهائي (DA)</Label>
+                    <Input value={avenant.salNetFinal} onChange={(e) => updateAvenant("salNetFinal", e.target.value)} className="h-11" /></div>
+                </div>
+                <Button type="button" variant="outline" onClick={() => setShowAvenant(false)} size="sm">Masquer le ملحق</Button>
+              </div>
+            )}
           </div>
 
           {selectedWorker && (
             <div id="document-preview">
-              <ContractPreview worker={selectedWorker} data={formData} />
+              <ContractPreview worker={selectedWorker} data={formData} lang={lang} logoDataUrl={logoDataUrl} />
+            </div>
+          )}
+
+          {selectedWorker && showAvenant && (
+            <div ref={avenantRef}>
+              <AvenantPreview worker={selectedWorker} avenant={avenant} contractData={formData} logoDataUrl={logoDataUrl} />
             </div>
           )}
         </div>
