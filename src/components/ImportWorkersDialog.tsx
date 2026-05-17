@@ -23,6 +23,7 @@ const EXCEL_HEADERS = [
   { key: "numero_compte", label: "Numéro de Compte" },
   { key: "acte_naissance", label: "Acte de Naissance" },
   { key: "is_department_head", label: "Chef de Service (Oui/Non)" },
+  { key: "date_demission", label: "Date de Démission" },
 ];
 
 function parseExcelDate(value: any): string | null {
