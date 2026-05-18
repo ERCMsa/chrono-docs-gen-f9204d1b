@@ -38,7 +38,4 @@ export function getContractStatus(endDateStr?: string | null): ContractStatus {
   return { kind: "active", endDate: endDateStr, daysLeft: diffDays };
 }
 
-export function formatDateFR(d?: string | null) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("fr-FR");
-}
+export { formatDateFR } from "./date-utils";

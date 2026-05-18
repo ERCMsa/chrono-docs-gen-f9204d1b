@@ -1,3 +1,4 @@
+import { formatDateFR } from "@/lib/date-utils";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getDocuments, deleteDocument, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
@@ -89,7 +90,7 @@ export default function Documents() {
                       )}
                     </td>
                     <td className="p-4 text-sm text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString("fr-FR")}
+                      {formatDateFR(doc.created_at)}
                     </td>
                     <td className="p-4 text-right">
                       <Link to={`/documents/${doc.id}`}>

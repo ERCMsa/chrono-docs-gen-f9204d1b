@@ -1,3 +1,4 @@
+import { formatDateFR } from "@/lib/date-utils";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -224,7 +225,7 @@ export default function Acomptes() {
             ) : (
               filtered.map((t) => (
                 <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="p-4 text-sm">{new Date(t.transaction_date).toLocaleDateString("fr-FR")}</td>
+                  <td className="p-4 text-sm">{formatDateFR(t.transaction_date)}</td>
                   <td className="p-4 font-medium">{(t as any).workers?.full_name ?? "—"}</td>
                   <td className="p-4">
                     {t.type === "add" ? (

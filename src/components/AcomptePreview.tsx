@@ -1,5 +1,6 @@
 import logoErcm from "@/assets/logo-ercm.png";
 import type { AcompteTransaction, Worker } from "@/lib/supabase-helpers";
+import { formatDateFR } from "@/lib/date-utils";
 
 interface Props {
   worker: Worker;
@@ -7,7 +8,7 @@ interface Props {
 }
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(n);
-const dt = (s: string) => new Date(s).toLocaleDateString("fr-FR");
+const dt = (s: string) => formatDateFR(s);
 
 export default function AcomptePreview({ worker, tx }: Props) {
   return (

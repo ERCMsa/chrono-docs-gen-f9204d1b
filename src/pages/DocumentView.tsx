@@ -1,3 +1,4 @@
+import { formatDateFR } from "@/lib/date-utils";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/clerk-react";
@@ -104,7 +105,7 @@ export default function DocumentView() {
           <Link to="/documents"><Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button></Link>
           <div>
             <h1 className="text-2xl font-bold">{doc.title}</h1>
-            <p className="text-sm text-muted-foreground">Créé le {new Date(doc.created_at).toLocaleDateString("fr-FR")}</p>
+            <p className="text-sm text-muted-foreground">Créé le {formatDateFR(doc.created_at)}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -136,7 +137,7 @@ export default function DocumentView() {
               {isValidatedResp ? (
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm">Validé {doc.responsible_validated_at ? `le ${new Date(doc.responsible_validated_at).toLocaleDateString("fr-FR")}` : ""}</span>
+                  <span className="text-sm">Validé {doc.responsible_validated_at ? `le ${formatDateFR(doc.responsible_validated_at)}` : ""}</span>
                 </div>
               ) : canValidateResponsible ? (
                 <div className="space-y-2">
@@ -163,7 +164,7 @@ export default function DocumentView() {
               {isValidatedRh ? (
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm">Validé {doc.rh_validated_at ? `le ${new Date(doc.rh_validated_at).toLocaleDateString("fr-FR")}` : ""}</span>
+                  <span className="text-sm">Validé {doc.rh_validated_at ? `le ${formatDateFR(doc.rh_validated_at)}` : ""}</span>
                 </div>
               ) : canValidateRH ? (
                 <div className="space-y-2">
