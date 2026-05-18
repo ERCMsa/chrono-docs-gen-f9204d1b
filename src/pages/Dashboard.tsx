@@ -85,7 +85,7 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium">{doc.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {DOCUMENT_TYPES[doc.document_type as keyof typeof DOCUMENT_TYPES]?.label} • {new Date(doc.created_at).toLocaleDateString("fr-FR")}
+                      {DOCUMENT_TYPES[doc.document_type as keyof typeof DOCUMENT_TYPES]?.label} • {formatDateFR(doc.created_at)}
                     </p>
                   </div>
                   <FileText className="w-4 h-4 text-muted-foreground" />

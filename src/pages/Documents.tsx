@@ -89,7 +89,7 @@ export default function Documents() {
                       )}
                     </td>
                     <td className="p-4 text-sm text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString("fr-FR")}
+                      {formatDateFR(doc.created_at)}
                     </td>
                     <td className="p-4 text-right">
                       <Link to={`/documents/${doc.id}`}>

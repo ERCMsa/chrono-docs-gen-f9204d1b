@@ -399,7 +399,7 @@ export default function WorkerDetail() {
           ["Adresse", worker.address],
           ["Poste", worker.position],
           ["Département", worker.department],
-          ["Date d'embauche", worker.hire_date ? new Date(worker.hire_date).toLocaleDateString("fr-FR") : null],
+          ["Date d'embauche", worker.hire_date ? formatDateFR(worker.hire_date) : null],
           ["Date de naissance", (worker as any).date_naissance ? new Date((worker as any).date_naissance).toLocaleDateString("fr-FR") : null],
           ["Lieu de naissance", (worker as any).lieu_naissance],
           ["Situation familiale", (worker as any).situation_familiale],
@@ -453,7 +453,7 @@ export default function WorkerDetail() {
               <tbody>
                 {acomptes.map((t) => (
                   <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-4 text-sm">{new Date(t.transaction_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm">{formatDateFR(t.transaction_date)}</td>
                     <td className="p-4">
                       {t.type === "add" ? (
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600"><TrendingUp className="w-3 h-3" />Avance</span>
@@ -494,7 +494,7 @@ export default function WorkerDetail() {
               <tbody>
                 {absences.map((a) => (
                   <tr key={a.id} className="border-b last:border-0">
-                    <td className="p-4 text-sm">{new Date(a.absence_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm">{formatDateFR(a.absence_date)}</td>
                     <td className="p-4 text-sm text-muted-foreground">{a.reason ?? "—"}</td>
                   </tr>
                 ))}
@@ -530,8 +530,8 @@ export default function WorkerDetail() {
                 {conges.map((c) => (
                   <tr key={c.id} className="border-b last:border-0">
                     <td className="p-4 text-sm font-medium">{CONGE_TYPES[c.conge_type]}</td>
-                    <td className="p-4 text-sm">{new Date(c.start_date).toLocaleDateString("fr-FR")}</td>
-                    <td className="p-4 text-sm">{new Date(c.end_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm">{formatDateFR(c.start_date)}</td>
+                    <td className="p-4 text-sm">{formatDateFR(c.end_date)}</td>
                     <td className="p-4 text-sm text-right font-semibold">{congeDuration(c.start_date, c.end_date)} j</td>
                     <td className="p-4 text-sm text-muted-foreground max-w-[250px] truncate">{c.reason ?? "—"}</td>
                   </tr>
@@ -587,7 +587,7 @@ export default function WorkerDetail() {
                         )}
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(doc.created_at).toLocaleDateString("fr-FR")}
+                        {formatDateFR(doc.created_at)}
                       </td>
                       <td className="p-4 text-right">
                         <Link to={`/documents/${doc.id}`}>

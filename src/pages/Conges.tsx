@@ -230,8 +230,8 @@ export default function Conges() {
                         {CONGE_TYPES[c.conge_type]}
                       </span>
                     </td>
-                    <td className="p-4 text-sm">{new Date(c.start_date).toLocaleDateString("fr-FR")}</td>
-                    <td className="p-4 text-sm">{new Date(c.end_date).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-4 text-sm">{formatDateFR(c.start_date)}</td>
+                    <td className="p-4 text-sm">{formatDateFR(c.end_date)}</td>
                     <td className="p-4 text-right font-semibold">{dur} j</td>
                     <td className="p-4 text-sm text-muted-foreground max-w-[250px] truncate">{c.reason ?? "—"}</td>
                     <td className="p-4 text-right whitespace-nowrap">

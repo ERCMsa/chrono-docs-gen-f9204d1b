@@ -168,7 +168,7 @@ export default function Absences() {
             ) : (
               filtered.map((a) => (
                 <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="p-4 text-sm">{new Date(a.absence_date).toLocaleDateString("fr-FR")}</td>
+                  <td className="p-4 text-sm">{formatDateFR(a.absence_date)}</td>
                   <td className="p-4 font-medium">
                     <Link to={`/workers/${a.worker_id}`} className="hover:underline">{a.workers?.full_name ?? "—"}</Link>
                   </td>
