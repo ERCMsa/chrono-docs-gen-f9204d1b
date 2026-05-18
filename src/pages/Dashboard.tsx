@@ -1,3 +1,4 @@
+import { formatDateFR } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkers, getDocuments, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
 import { Users, FileText, LogOut, LogIn, AlertTriangle, FilePlus } from "lucide-react";

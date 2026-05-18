@@ -1,3 +1,4 @@
+import { formatDateFR } from "@/lib/date-utils";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getDocuments, deleteDocument, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
