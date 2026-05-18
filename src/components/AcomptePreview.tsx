@@ -1,5 +1,6 @@
 import logoErcm from "@/assets/logo-ercm.png";
 import type { AcompteTransaction, Worker } from "@/lib/supabase-helpers";
+import { formatDateFR } from "@/lib/date-utils";
 
 interface Props {
   worker: Worker;
