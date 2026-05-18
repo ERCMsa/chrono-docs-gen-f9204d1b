@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/date-input";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -362,7 +363,7 @@ export default function GenerateDocument() {
                   <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">رقم العقد المرجعي</Label>
                     <Input value={avenant.numContratRef} onChange={(e) => updateAvenant("numContratRef", e.target.value)} className="h-11" /></div>
                   <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">تاريخ التحرير</Label>
-                    <Input type="date" value={avenant.dateSign} onChange={(e) => updateAvenant("dateSign", e.target.value)} className="h-11" /></div>
+                    <DateInput value={avenant.dateSign} onChange={(e) => updateAvenant("dateSign", e.target.value)} className="h-11" /></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div><Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">الأجر القاعدي (DA)</Label>
