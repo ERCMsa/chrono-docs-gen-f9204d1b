@@ -140,7 +140,7 @@ export default function Conges() {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Au *</Label>
-                  <DateInput value={end} onChange={(e) => setEnd(e.target.value)} className="h-11" min={start} />
+                  <DateInput value={end} onChange={(e) => setEnd(e.target.value)} className="h-11" />
                 </div>
               </div>
               {duration > 0 && (
