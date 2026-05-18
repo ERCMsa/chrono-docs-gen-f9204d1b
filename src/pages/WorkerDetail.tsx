@@ -400,7 +400,7 @@ export default function WorkerDetail() {
           ["Poste", worker.position],
           ["Département", worker.department],
           ["Date d'embauche", worker.hire_date ? formatDateFR(worker.hire_date) : null],
-          ["Date de naissance", (worker as any).date_naissance ? new Date((worker as any).date_naissance).toLocaleDateString("fr-FR") : null],
+          ["Date de naissance", (worker as any).date_naissance ? formatDateFR((worker as any).date_naissance) : null],
           ["Lieu de naissance", (worker as any).lieu_naissance],
           ["Situation familiale", (worker as any).situation_familiale],
           ["Sexe", (worker as any).sexe],
