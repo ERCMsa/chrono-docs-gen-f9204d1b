@@ -31,13 +31,26 @@ export default function Workers() {
   const [importOpen, setImportOpen] = useState(false);
   const { data: workers, isLoading } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
 
+  const DATE_FIELDS = ["date_naissance", "hire_date", "date_debut_contrat", "date_fin_contrat", "date_demission"];
+  const sanitize = (obj: Record<string, any>) => {
+    const out: Record<string, any> = { ...obj };
+    for (const k of DATE_FIELDS) {
+      if (out[k] === "" || out[k] === undefined) out[k] = null;
+    }
+    return out;
+  };
+
   const createMutation = useMutation({
     mutationFn: () => {
       const payload: any = { ...form, is_department_head: isDeptHead };
-      if (form.duree_contrat && form.date_debut_contrat) {
-        payload.date_fin_contrat = computeEndDate(form.date_debut_contrat, form.duree_contrat);
+      // hire_date sert de date de début de contrat
+      payload.date_debut_contrat = form.hire_date || null;
+      if (form.duree_contrat && form.hire_date) {
+        payload.date_fin_contrat = computeEndDate(form.hire_date, form.duree_contrat);
+      } else {
+        payload.date_fin_contrat = null;
       }
-      return createWorker(payload);
+      return createWorker(sanitize(payload) as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workers"] });
