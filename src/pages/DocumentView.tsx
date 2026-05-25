@@ -94,10 +94,10 @@ export default function DocumentView() {
         <div className="bg-card border rounded-xl p-5 space-y-4">
           <h3 className="font-semibold flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Validation du document</h3>
 
-          {!currentWorker && (
+          {!canValidateResponsible && !canValidateRH && (
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 rounded-lg p-3">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Votre compte ({currentUserName || "—"}) ne correspond à aucun employé. Vous ne pouvez pas valider.</span>
+              <span>Votre rôle ({userRole || "—"}) ne permet pas de valider ce document.</span>
             </div>
           )}
 
@@ -112,7 +112,7 @@ export default function DocumentView() {
                 </div>
               ) : canValidateResponsible ? (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Connecté en tant que : {currentWorker?.full_name}</p>
+                  <p className="text-xs text-muted-foreground">Connecté en tant que : {displayName} ({userRole})</p>
                   <Button size="sm" className="w-full" disabled={validateMutation.isPending} onClick={() => validateMutation.mutate({ role: "responsible" })}>
                     Valider (Chef de Service)
                   </Button>
@@ -139,7 +139,7 @@ export default function DocumentView() {
                 </div>
               ) : canValidateRH ? (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Connecté en tant que : {currentWorker?.full_name} (RH)</p>
+                  <p className="text-xs text-muted-foreground">Connecté en tant que : {displayName} (RH)</p>
                   <Button size="sm" className="w-full" disabled={validateMutation.isPending} onClick={() => validateMutation.mutate({ role: "rh" })}>
                     Valider (RH)
                   </Button>
