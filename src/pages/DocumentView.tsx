@@ -126,7 +126,7 @@ export default function DocumentView() {
           {!currentWorker && (
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 rounded-lg p-3">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Votre compte Clerk ({clerkUsername || "—"}) ne correspond à aucun employé. Vous ne pouvez pas valider.</span>
+              <span>Votre compte ({currentUserName || "—"}) ne correspond à aucun employé. Vous ne pouvez pas valider.</span>
             </div>
           )}
 
