@@ -386,6 +386,10 @@ export type Database = {
         | "FINANCE"
         | "CLIENT"
         | "HSE"
+        | "CNC"
+        | "VISITEUR"
+        | "UNITE_ONE"
+        | "UNITE_TWO"
       validation_status: "PENDING" | "VALIDATED" | "REJECTED"
     }
     CompositeTypes: {
@@ -527,6 +531,10 @@ export const Constants = {
         "FINANCE",
         "CLIENT",
         "HSE",
+        "CNC",
+        "VISITEUR",
+        "UNITE_ONE",
+        "UNITE_TWO",
       ],
       validation_status: ["PENDING", "VALIDATED", "REJECTED"],
     },
