@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DateInput } from "@/components/ui/date-input";
 import { CheckCircle2, Clock, XCircle, Download, ShieldCheck, FileText } from "lucide-react";
 import ValidateDocumentDialog from "@/components/ValidateDocumentDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import Forbidden from "@/pages/Forbidden";
 
 function StatusBadge({ status }: { status?: string }) {
   if (status === "VALIDATED") return <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 dark:bg-green-950/40 dark:text-green-300 px-2 py-1 rounded-full"><CheckCircle2 className="w-3.5 h-3.5" /> Validé</span>;
@@ -16,6 +18,8 @@ function StatusBadge({ status }: { status?: string }) {
 }
 
 export default function DocumentValidation() {
+  const { role, isAdmin } = useAuth();
+  if (!isAdmin() && role !== "RH") return <Forbidden />;
   const { data: documents, isLoading } = useQuery({ queryKey: ["documents-validation"], queryFn: getDocuments });
   const [validateDoc, setValidateDoc] = useState<any | null>(null);
 
