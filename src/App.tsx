@@ -20,7 +20,6 @@ import AcompteView from "./pages/AcompteView";
 import Absences from "./pages/Absences";
 import Conges from "./pages/Conges";
 import AdminPermissions from "./pages/AdminPermissions";
-import DocumentValidation from "./pages/DocumentValidation";
 
 const queryClient = new QueryClient();
 
