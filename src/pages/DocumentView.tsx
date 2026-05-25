@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { DOCUMENT_TYPES, validateDocument, getDepartmentHeads, getWorkers } from "@/lib/supabase-helpers";
+import { DOCUMENT_TYPES, validateDocument } from "@/lib/supabase-helpers";
 import { exportToPdf } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
 import { Download, ArrowLeft, Printer, CheckCircle, Shield, AlertCircle } from "lucide-react";
@@ -17,8 +17,7 @@ import type { Json } from "@/integrations/supabase/types";
 export default function DocumentView() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const [validatorId, setValidatorId] = useState("");
-  const { user: authUser } = useAuth();
+  const { user: authUser, role, isAdmin } = useAuth();
 
   const { data: doc, isLoading } = useQuery({
     queryKey: ["document", id],
@@ -34,44 +33,19 @@ export default function DocumentView() {
     enabled: !!id,
   });
 
-  const { data: deptHeads } = useQuery({
-    queryKey: ["department-heads"],
-    queryFn: getDepartmentHeads,
-  });
-
-  // Fetch all workers to find the current user's worker record
-  const { data: allWorkers } = useQuery({
-    queryKey: ["workers"],
-    queryFn: getWorkers,
-  });
-
-  // Find the worker record matching the current user (by full_name or username)
-  const currentUserName = (authUser?.full_name || authUser?.username || "").toLowerCase();
-  const currentWorker = allWorkers?.find(
-    (w) => w.full_name.toLowerCase() === currentUserName
-  );
-
-  // Check if current user can validate as responsible (must match a dept head for the worker's dept)
+  // Role-based validation: chef de service = user's role matches worker's department.
+  // RH = user has RH role. ADMIN can do both.
   const worker = (doc as any)?.workers;
-  const canValidateResponsible = (() => {
-    if (!currentWorker) return false;
-    if (!currentWorker.is_department_head) return false;
-    // Must be head of the same department as the document's worker
-    if (!worker?.department || !currentWorker.department) return false;
-    return currentWorker.department.toLowerCase() === worker.department.toLowerCase();
-  })();
+  const workerDept = (worker?.department ?? "").trim().toUpperCase();
+  const userRole = (role ?? "").toUpperCase();
 
-  // Check if current user can validate as RH (must belong to RH department)
-  const canValidateRH = (() => {
-    if (!currentWorker) return false;
-    return currentWorker.department?.toLowerCase() === "rh";
-  })();
+  const canValidateResponsible =
+    isAdmin() || (!!userRole && !!workerDept && userRole === workerDept);
+  const canValidateRH = isAdmin() || userRole === "RH";
 
   const validateMutation = useMutation({
-    mutationFn: ({ role }: { role: "responsible" | "rh" }) => {
-      const vId = role === "responsible" ? (currentWorker?.id || validatorId || undefined) : (currentWorker?.id || undefined);
-      return validateDocument(id!, role, vId);
-    },
+    mutationFn: ({ role: r }: { role: "responsible" | "rh" }) =>
+      validateDocument(id!, r, authUser?.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document", id] });
       toast.success("Document validé");
@@ -93,10 +67,7 @@ export default function DocumentView() {
   const isValidatedResp = doc.validated_by_responsible;
   const isValidatedRh = doc.validated_by_rh;
 
-  // Filter dept heads matching the worker's department
-  const matchingHeads = deptHeads?.filter((h) =>
-    h.department && worker?.department && h.department.toLowerCase() === worker.department.toLowerCase()
-  );
+  const displayName = authUser?.full_name || authUser?.username || "—";
 
   return (
     <div className="space-y-6">
