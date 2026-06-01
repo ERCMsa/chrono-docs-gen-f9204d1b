@@ -31,6 +31,7 @@ export default function Workers() {
   const [form, setForm] = useState<Record<string, any>>({ ...emptyWorker });
   const [isDeptHead, setIsDeptHead] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [importOpen, setImportOpen] = useState(false);
   const { data: workers, isLoading } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
 
@@ -76,13 +77,18 @@ export default function Workers() {
 
   const filtered = workers?.filter((w) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch = (
       w.full_name.toLowerCase().includes(q) ||
       (w.position ?? "").toLowerCase().includes(q) ||
       (w.department ?? "").toLowerCase().includes(q) ||
       (w.phone ?? "").toLowerCase().includes(q) ||
       (w.matricule ?? "").toLowerCase().includes(q)
     );
+    const hasDemission = !!(w as any).date_demission;
+    const matchesStatus =
+      statusFilter === "all" ? true :
+      statusFilter === "inactive" ? hasDemission : !hasDemission;
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -247,14 +253,24 @@ export default function Workers() {
 
       <ImportWorkersDialog open={importOpen} onOpenChange={setImportOpen} />
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un employé (nom, poste, matricule...)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 h-11"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un employé (nom, poste, matricule...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <SelectTrigger className="h-11 sm:w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les employés</SelectItem>
+            <SelectItem value="active">Actifs</SelectItem>
+            <SelectItem value="inactive">Non actifs (démission)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -287,6 +303,11 @@ export default function Workers() {
                   </div>
 
                   <div className="mt-auto space-y-2">
+                    {(w as any).date_demission && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-muted text-muted-foreground border">
+                        <XCircle className="w-3 h-3" /> Démission · {formatDateFR((w as any).date_demission)}
+                      </span>
+                    )}
                     {status.kind === "expired" && (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-red-900/15 text-red-900 dark:text-red-300 border border-red-900/30">
                         <XCircle className="w-3 h-3" /> Contrat expiré
