@@ -253,14 +253,24 @@ export default function Workers() {
 
       <ImportWorkersDialog open={importOpen} onOpenChange={setImportOpen} />
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un employé (nom, poste, matricule...)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 h-11"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un employé (nom, poste, matricule...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <SelectTrigger className="h-11 sm:w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les employés</SelectItem>
+            <SelectItem value="active">Actifs</SelectItem>
+            <SelectItem value="inactive">Non actifs (démission)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
