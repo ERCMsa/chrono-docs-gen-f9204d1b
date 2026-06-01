@@ -303,6 +303,11 @@ export default function Workers() {
                   </div>
 
                   <div className="mt-auto space-y-2">
+                    {(w as any).date_demission && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-muted text-muted-foreground border">
+                        <XCircle className="w-3 h-3" /> Démission · {formatDateFR((w as any).date_demission)}
+                      </span>
+                    )}
                     {status.kind === "expired" && (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-red-900/15 text-red-900 dark:text-red-300 border border-red-900/30">
                         <XCircle className="w-3 h-3" /> Contrat expiré
