@@ -77,13 +77,18 @@ export default function Workers() {
 
   const filtered = workers?.filter((w) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch = (
       w.full_name.toLowerCase().includes(q) ||
       (w.position ?? "").toLowerCase().includes(q) ||
       (w.department ?? "").toLowerCase().includes(q) ||
       (w.phone ?? "").toLowerCase().includes(q) ||
       (w.matricule ?? "").toLowerCase().includes(q)
     );
+    const hasDemission = !!(w as any).date_demission;
+    const matchesStatus =
+      statusFilter === "all" ? true :
+      statusFilter === "inactive" ? hasDemission : !hasDemission;
+    return matchesSearch && matchesStatus;
   });
 
   return (
