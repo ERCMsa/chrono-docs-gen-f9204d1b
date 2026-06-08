@@ -98,10 +98,12 @@ export default function Acomptes() {
           <h1 className="text-3xl font-bold tracking-tight">Acomptes</h1>
           <p className="text-muted-foreground mt-1">Gestion des avances sur salaire</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Nouvel acompte</Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <AcomptesImportExport />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" />Nouvel acompte</Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader><DialogTitle>Nouvel acompte</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
