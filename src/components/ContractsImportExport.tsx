@@ -103,11 +103,23 @@ export default function ContractsImportExport() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const findWorker = (matricule: string, fullName: string, cin: string) => {
+  // Strip diacritics, spaces, punctuation, lowercase. Used for fuzzy Latin matching.
+  const normLatin = (s: string) =>
+    (s || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+
+  // Extract Latin tokens from an email local part: "abboubdjalila@x" -> "abboubdjalila"
+  const emailLocal = (s: string) => normLatin((s || "").split("@")[0] || "");
+
+  const findWorker = (matricule: string, fullName: string, cin: string, email: string) => {
     if (!workers) return null;
     const mat = matricule?.toString().trim().toLowerCase();
-    const name = fullName?.toString().trim().toLowerCase();
+    const name = (fullName || "").toString().trim();
     const c = cin?.toString().trim().toLowerCase();
+
     if (mat) {
       const byMat = workers.find((w) => (w.matricule || "").toLowerCase() === mat);
       if (byMat) return byMat;
@@ -117,10 +129,38 @@ export default function ContractsImportExport() {
       if (byCin) return byCin;
     }
     if (name) {
-      return workers.find((w) => (w.full_name || "").toLowerCase() === name) || null;
+      const exact = workers.find((w) => (w.full_name || "").trim().toLowerCase() === name.toLowerCase());
+      if (exact) return exact;
     }
+
+    // Fuzzy match using the Latin email local against worker full names
+    // (Arabic names in the file are paired with a Latin-based email like "abboubdjalila@..."
+    // which usually mirrors the worker's French name "ABBOUB DJALILA").
+    const eLocal = emailLocal(email);
+    if (eLocal && eLocal.length >= 4) {
+      // 1) Worker normalized full_name equals or contains the email local (or vice-versa)
+      let best = workers.find((w) => {
+        const wn = normLatin(w.full_name || "");
+        if (!wn) return false;
+        return wn === eLocal || wn.includes(eLocal) || eLocal.includes(wn);
+      });
+      if (best) return best;
+
+      // 2) All tokens (split by capital letters or separators) appear in the email local
+      best = workers.find((w) => {
+        const tokens = (w.full_name || "")
+          .split(/[\s\-_,.]+/)
+          .map(normLatin)
+          .filter((t) => t.length >= 3);
+        if (tokens.length === 0) return false;
+        return tokens.every((t) => eLocal.includes(t));
+      });
+      if (best) return best;
+    }
+
     return null;
   };
+
 
   // Map camelCase legacy keys -> snake_case keys used by the app
   const CAMEL_TO_SNAKE: Record<string, string> = {
