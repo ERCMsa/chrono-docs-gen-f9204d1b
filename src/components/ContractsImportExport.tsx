@@ -270,7 +270,7 @@ export default function ContractsImportExport() {
         const parsed = JSON.parse(text);
         const arr: any[] = Array.isArray(parsed) ? parsed : [parsed];
         const errs: string[] = [];
-        const ok: Array<{ worker_id: string; full_name: string; content: Record<string, any> }> = [];
+        const ok: Array<{ worker_id: string | null; full_name: string; content: Record<string, any>; newWorker?: Record<string, any> }> = [];
         arr.forEach((row, i) => {
           const matricule = row.matricule || row.content?.worker?.matricule || "";
           const fullName = row.full_name || row.nom || row.displayName || row.content?.worker?.full_name || "";
@@ -280,15 +280,27 @@ export default function ContractsImportExport() {
             return;
           }
           const worker = findWorker(matricule, fullName, cin, row.email || row.content?.email || "");
-          if (!worker) {
-            errs.push(`Élément ${i + 1}: Employé introuvable (${matricule || cin || fullName})`);
-            return;
+          const content = normalizeContent(row);
+          if (worker) {
+            ok.push({ worker_id: worker.id, full_name: worker.full_name, content: { ...content, worker } });
+          } else {
+            // Auto-create a new worker from the JSON entry
+            const newWorker: Record<string, any> = {
+              full_name: fullName || cin || matricule || "Sans nom",
+              matricule: matricule || null,
+              cin: cin || null,
+              phone: row.tel || row.phone || null,
+              position: row.poste || row.position || null,
+              address: row.adresse || row.address || null,
+              date_naissance: row.dateNais || row.date_naissance || null,
+              lieu_naissance: row.lieuNais || row.lieu_naissance || null,
+            };
+            ok.push({ worker_id: null, full_name: newWorker.full_name, content, newWorker });
           }
-          const content = { ...normalizeContent(row), worker };
-          ok.push({ worker_id: worker.id, full_name: worker.full_name, content });
         });
         setParsedRows(ok);
         setErrors(errs);
+
 
       } catch {
         toast.error("Fichier JSON invalide");
