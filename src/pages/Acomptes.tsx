@@ -151,7 +151,8 @@ export default function Acomptes() {
               <Button onClick={handleSubmit} disabled={createMut.isPending}>{createMut.isPending ? "..." : "Enregistrer"}</Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {/* Stats */}
