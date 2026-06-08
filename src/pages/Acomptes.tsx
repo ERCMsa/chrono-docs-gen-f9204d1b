@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Wallet, TrendingUp, TrendingDown, Trash2, Eye, Filter } from "lucide-react";
 import { toast } from "sonner";
+import AcomptesImportExport from "@/components/AcomptesImportExport";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(n);
 const todayStr = () => new Date().toISOString().slice(0, 10);
