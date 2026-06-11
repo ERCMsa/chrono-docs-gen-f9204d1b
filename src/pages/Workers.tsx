@@ -34,6 +34,7 @@ export default function Workers() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [importOpen, setImportOpen] = useState(false);
   const { data: workers, isLoading } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
+  const { data: contractWorkerIds } = useQuery({ queryKey: ["workers-with-contract"], queryFn: getWorkerIdsWithContract });
 
   const DATE_FIELDS = ["date_naissance", "hire_date", "date_debut_contrat", "date_fin_contrat", "date_demission"];
   const sanitize = (obj: Record<string, any>) => {
