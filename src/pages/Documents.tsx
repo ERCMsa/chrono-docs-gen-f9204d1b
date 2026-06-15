@@ -21,7 +21,9 @@ export default function Documents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
       toast.success("Document supprimé");
+      setToDelete(null);
     },
+    onError: () => toast.error("Erreur lors de la suppression"),
   });
 
   const filtered = documents?.filter((doc) => typeFilter === "all" || doc.document_type === typeFilter);
