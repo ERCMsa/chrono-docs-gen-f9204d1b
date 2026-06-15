@@ -2,7 +2,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWorkers, createDocument, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
+import { getWorkers, createDocument, createWorker, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
 import { exportToPdf } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Save, Printer, Plus } from "lucide-react";
+import { Download, Save, Printer, Plus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import DocumentPreview from "@/components/DocumentPreview";
 import ContractPreview from "@/components/ContractPreview";
 import AvenantPreview, { AvenantData, EMPTY_AVENANT } from "@/components/AvenantPreview";
@@ -244,6 +245,25 @@ export default function GenerateDocument() {
   const [showAvenant, setShowAvenant] = useState(false);
   const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
   const avenantRef = useRef<HTMLDivElement>(null);
+  const [newWorkerOpen, setNewWorkerOpen] = useState(false);
+  const [newWorker, setNewWorker] = useState({ full_name: "", position: "", cin: "", phone: "" });
+
+  const createWorkerMutation = useMutation({
+    mutationFn: () => createWorker({
+      full_name: newWorker.full_name.trim(),
+      position: newWorker.position.trim() || null,
+      cin: newWorker.cin.trim() || null,
+      phone: newWorker.phone.trim() || null,
+    }),
+    onSuccess: (w) => {
+      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      setWorkerId(w.id);
+      setNewWorkerOpen(false);
+      setNewWorker({ full_name: "", position: "", cin: "", phone: "" });
+      toast.success("Nouvel employé créé");
+    },
+    onError: () => toast.error("Erreur lors de la création de l'employé"),
+  });
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -326,15 +346,66 @@ export default function GenerateDocument() {
       {/* Employee selector - always on top */}
       <div className="bg-card border rounded-xl p-6">
         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
-        <Select value={workerId} onValueChange={setWorkerId}>
-          <SelectTrigger className="h-11 max-w-md"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger>
-          <SelectContent>
-            {workers?.map((w) => (
-              <SelectItem key={w.id} value={w.id}>{w.full_name} — {w.position}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={workerId} onValueChange={setWorkerId}>
+            <SelectTrigger className="h-11 w-full max-w-md"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger>
+            <SelectContent>
+              {workers?.map((w) => (
+                <SelectItem key={w.id} value={w.id}>{w.full_name} — {w.position}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isContract && (
+            <Button type="button" variant="outline" onClick={() => setNewWorkerOpen(true)} className="h-11">
+              <UserPlus className="w-4 h-4 mr-2" />Nouvel employé
+            </Button>
+          )}
+        </div>
+        {isContract && (
+          <p className="text-xs text-muted-foreground mt-2">
+            L'employé n'existe pas dans la liste ? Cliquez sur « Nouvel employé » pour l'ajouter.
+          </p>
+        )}
       </div>
+
+      <Dialog open={newWorkerOpen} onOpenChange={setNewWorkerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un nouvel employé</DialogTitle>
+            <DialogDescription>Cet employé sera ajouté à la liste et sélectionné pour ce contrat.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Nom complet *</Label>
+              <Input value={newWorker.full_name} onChange={(e) => setNewWorker(p => ({ ...p, full_name: e.target.value }))} className="h-11" placeholder="Nom et prénom" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Poste</Label>
+              <Input value={newWorker.position} onChange={(e) => setNewWorker(p => ({ ...p, position: e.target.value }))} className="h-11" placeholder="Poste / Fonction" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">CIN</Label>
+                <Input value={newWorker.cin} onChange={(e) => setNewWorker(p => ({ ...p, cin: e.target.value }))} className="h-11" />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Téléphone</Label>
+                <Input value={newWorker.phone} onChange={(e) => setNewWorker(p => ({ ...p, phone: e.target.value }))} className="h-11" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewWorkerOpen(false)}>Annuler</Button>
+            <Button
+              onClick={() => createWorkerMutation.mutate()}
+              disabled={!newWorker.full_name.trim() || createWorkerMutation.isPending}
+            >
+              {createWorkerMutation.isPending ? "Création..." : "Créer et sélectionner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {isContract ? (
         /* Contract: full-width form then full-width preview */

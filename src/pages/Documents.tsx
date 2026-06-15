@@ -8,10 +8,12 @@ import { FileText, Trash2, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ContractsImportExport from "@/components/ContractsImportExport";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function Documents() {
   const queryClient = useQueryClient();
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [toDelete, setToDelete] = useState<{ id: string; title: string } | null>(null);
   const { data: documents, isLoading } = useQuery({ queryKey: ["documents"], queryFn: getDocuments });
 
   const deleteMutation = useMutation({
@@ -19,7 +21,9 @@ export default function Documents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
       toast.success("Document supprimé");
+      setToDelete(null);
     },
+    onError: () => toast.error("Erreur lors de la suppression"),
   });
 
   const filtered = documents?.filter((doc) => typeFilter === "all" || doc.document_type === typeFilter);
@@ -100,7 +104,7 @@ export default function Documents() {
                       <Link to={`/documents/${doc.id}`}>
                         <Button variant="ghost" size="sm">Voir</Button>
                       </Link>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(doc.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => setToDelete({ id: doc.id, title: doc.title })}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </td>
@@ -116,6 +120,26 @@ export default function Documents() {
           <p className="text-muted-foreground">Aucun document {typeFilter !== "all" ? "de ce type" : "créé"}</p>
         </div>
       )}
+
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le document <strong>« {toDelete?.title} »</strong> sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => toDelete && deleteMutation.mutate(toDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
