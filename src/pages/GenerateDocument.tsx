@@ -245,6 +245,25 @@ export default function GenerateDocument() {
   const [showAvenant, setShowAvenant] = useState(false);
   const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
   const avenantRef = useRef<HTMLDivElement>(null);
+  const [newWorkerOpen, setNewWorkerOpen] = useState(false);
+  const [newWorker, setNewWorker] = useState({ full_name: "", position: "", cin: "", phone: "" });
+
+  const createWorkerMutation = useMutation({
+    mutationFn: () => createWorker({
+      full_name: newWorker.full_name.trim(),
+      position: newWorker.position.trim() || null,
+      cin: newWorker.cin.trim() || null,
+      phone: newWorker.phone.trim() || null,
+    }),
+    onSuccess: (w) => {
+      queryClient.invalidateQueries({ queryKey: ["workers"] });
+      setWorkerId(w.id);
+      setNewWorkerOpen(false);
+      setNewWorker({ full_name: "", position: "", cin: "", phone: "" });
+      toast.success("Nouvel employé créé");
+    },
+    onError: () => toast.error("Erreur lors de la création de l'employé"),
+  });
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
