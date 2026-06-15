@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 export default function Documents() {
   const queryClient = useQueryClient();
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [toDelete, setToDelete] = useState<{ id: string; title: string } | null>(null);
   const { data: documents, isLoading } = useQuery({ queryKey: ["documents"], queryFn: getDocuments });
 
   const deleteMutation = useMutation({
