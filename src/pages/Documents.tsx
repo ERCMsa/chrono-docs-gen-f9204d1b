@@ -8,6 +8,7 @@ import { FileText, Trash2, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ContractsImportExport from "@/components/ContractsImportExport";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function Documents() {
   const queryClient = useQueryClient();
