@@ -104,7 +104,7 @@ export default function Documents() {
                       <Link to={`/documents/${doc.id}`}>
                         <Button variant="ghost" size="sm">Voir</Button>
                       </Link>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(doc.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => setToDelete({ id: doc.id, title: doc.title })}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </td>
