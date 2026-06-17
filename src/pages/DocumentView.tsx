@@ -63,7 +63,7 @@ export default function DocumentView() {
     if (typeof v === "string") formData[k] = v;
   }
 
-  const isBon = docType === "bon_sortie" || docType === "bon_rentree";
+  const isBon = docType === "bon_sortie";
   const isValidatedResp = doc.validated_by_responsible;
   const isValidatedRh = doc.validated_by_rh;
 
@@ -89,7 +89,7 @@ export default function DocumentView() {
         </div>
       </div>
 
-      {/* Validation panel for bon_sortie / bon_rentree */}
+      {/* Validation panel for bon_sortie */}
       {isBon && (
         <div className="bg-card border rounded-xl p-5 space-y-4">
           <h3 className="font-semibold flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Validation du document</h3>

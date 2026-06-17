@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Users, LayoutDashboard, LogOut, LogIn, AlertTriangle, FilePlus, BarChart3, FileText, X, Wallet, CalendarX, CalendarRange, Shield } from "lucide-react";
+import { Users, LayoutDashboard, LogOut, AlertTriangle, FilePlus, BarChart3, FileText, X, Wallet, CalendarX, CalendarRange, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoErcm from "@/assets/logo-ercm.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { to: "/statistics", label: "Statistiques", icon: BarChart3, module: "reports" },
   { to: "/generate/contract", label: "Contrat", icon: FilePlus, module: "documents" },
   { to: "/generate/bon_sortie", label: "Bon de sortie", icon: LogOut, module: "documents" },
-  { to: "/generate/bon_rentree", label: "Bon de rentrée", icon: LogIn, module: "documents" },
+  
   { to: "/generate/avertissement", label: "Avertissement", icon: AlertTriangle, module: "documents" },
   { to: "/acomptes", label: "Acomptes", icon: Wallet, module: "payroll" },
   { to: "/absences", label: "Absences", icon: CalendarX, module: "leave" },

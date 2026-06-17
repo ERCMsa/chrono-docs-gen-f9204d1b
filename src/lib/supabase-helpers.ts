@@ -280,6 +280,5 @@ export async function deleteConge(id: string) {
 export const DOCUMENT_TYPES = {
   contract: { label: "Contrat de travail", icon: "FileText" },
   bon_sortie: { label: "Bon de sortie", icon: "LogOut" },
-  bon_rentree: { label: "Bon de rentrée", icon: "LogIn" },
   avertissement: { label: "Avertissement", icon: "AlertTriangle" },
 } as const;
