@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, CalendarRange, Trash2, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
+import WorkerAutocomplete from "@/components/WorkerAutocomplete";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
