@@ -115,14 +115,7 @@ export default function Conges() {
             <div className="space-y-4 pt-2">
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
-                <Select value={workerId} onValueChange={setWorkerId} disabled={!!editing}>
-                  <SelectTrigger className="h-11"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger>
-                  <SelectContent>
-                    {workers?.map((w) => (
-                      <SelectItem key={w.id} value={w.id}>{w.full_name} {w.matricule ? `(#${w.matricule})` : ""}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
               </div>
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Type *</Label>
@@ -164,15 +157,16 @@ export default function Conges() {
       {/* Filters */}
       <div className="bg-card border rounded-xl p-4 flex flex-wrap items-end gap-3">
         <Filter className="w-4 h-4 text-muted-foreground mb-2.5" />
-        <div>
+        <div className="w-[200px]">
           <Label className="text-xs text-muted-foreground mb-1 block">Employé</Label>
-          <Select value={filterWorker} onValueChange={setFilterWorker}>
-            <SelectTrigger className="h-9 w-[180px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              {workers?.map((w) => <SelectItem key={w.id} value={w.id}>{w.full_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <WorkerAutocomplete
+            workers={workers}
+            value={filterWorker}
+            onChange={setFilterWorker}
+            includeAll
+            allLabel="Tous"
+            className="h-9"
+          />
         </div>
         <div>
           <Label className="text-xs text-muted-foreground mb-1 block">Type</Label>
