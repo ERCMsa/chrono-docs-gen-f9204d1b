@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import WorkerAutocomplete from "@/components/WorkerAutocomplete";
 import { Download, Save, Printer, Plus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -40,8 +41,6 @@ const getDefaultValues = (docType: DocType): Record<string, string> => {
       };
     case "bon_sortie":
       return { sortie_date: todayStr(), sortie_time: nowTime() };
-    case "bon_rentree":
-      return { rentree_date: todayStr(), rentree_time: nowTime() };
     case "avertissement":
       return { avert_date: todayStr(), infraction_date: todayStr() };
     default:
@@ -55,14 +54,6 @@ const formFieldsByType: Record<DocType, { key: string; label: string; type?: str
     { key: "sortie_date", label: "Date de sortie", type: "date" },
     { key: "sortie_time", label: "Heure de sortie", type: "time" },
     { key: "reason", label: "Motif de sortie", placeholder: "Ex: Rendez-vous médical" },
-    { key: "destination", label: "Destination", placeholder: "Ex: Casablanca" },
-  ],
-  bon_rentree: [
-    { key: "rentree_date", label: "Date de rentrée", type: "date" },
-    { key: "rentree_time", label: "Heure de rentrée", type: "time" },
-    { key: "absence_start", label: "Début d'absence", type: "date" },
-    { key: "absence_reason", label: "Motif d'absence", placeholder: "Ex: Congé maladie" },
-    { key: "notes", label: "Observations", type: "textarea", placeholder: "Notes supplémentaires..." },
   ],
   avertissement: [
     { key: "avert_date", label: "Date de l'avertissement", type: "date" },
@@ -347,14 +338,9 @@ export default function GenerateDocument() {
       <div className="bg-card border rounded-xl p-6">
         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={workerId} onValueChange={setWorkerId}>
-            <SelectTrigger className="h-11 w-full max-w-md"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger>
-            <SelectContent>
-              {workers?.map((w) => (
-                <SelectItem key={w.id} value={w.id}>{w.full_name} — {w.position}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex-1 min-w-[280px] max-w-md">
+            <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} />
+          </div>
           {isContract && (
             <Button type="button" variant="outline" onClick={() => setNewWorkerOpen(true)} className="h-11">
               <UserPlus className="w-4 h-4 mr-2" />Nouvel employé
@@ -517,6 +503,22 @@ export default function GenerateDocument() {
                   )}
                 </div>
               ))}
+              {docType === "bon_sortie" && !!formData.sortie_time && (
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                    Heure de rentrée
+                  </Label>
+                  <Input
+                    type="time"
+                    value={formData.rentree_time ?? ""}
+                    onChange={(e) => setFormData((p) => ({ ...p, rentree_time: e.target.value }))}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Affiché car l'employé est sorti — renseignez l'heure de retour.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 pt-2 border-t border-border">
               <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1">

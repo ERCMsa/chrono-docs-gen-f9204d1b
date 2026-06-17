@@ -3,7 +3,7 @@ import logoErcm from "@/assets/logo-ercm.png";
 import ContractPreview from "./ContractPreview"
 
 interface Props {
-  type: "contract" | "bon_sortie" | "bon_rentree" | "avertissement";
+  type: "contract" | "bon_sortie" | "avertissement";
   worker: Worker;
   data: Record<string, string>;
   validationStatus?: {
@@ -131,43 +131,26 @@ export default function DocumentPreview({ type, worker, data, validationStatus }
     borderRadius: 8,
   };
 
-  const isBon = type === "bon_sortie" || type === "bon_rentree";
+  const isBon = type === "bon_sortie";
+
+  const sortieItems = [
+    { label: "Matricule", value: (worker as any).matricule },
+    { label: "Date de sortie", value: data.sortie_date },
+    { label: "Nom Complet", value: worker.full_name },
+    { label: "Heure de sortie", value: data.sortie_time },
+    { label: "Poste", value: worker.position },
+    { label: "Motif", value: data.reason },
+    { label: "Département", value: worker.department },
+  ];
+  if (data.rentree_time) {
+    sortieItems.push({ label: "Heure de rentrée", value: data.rentree_time });
+  }
 
   const templates: Record<string, React.ReactNode> = {
     bon_sortie: (
       <div style={pageStyle}>
         <DocHeader title="BON D AUTORISATION" subtitle="Sortie" />
-        <InfoGrid items={[
-          { label: "Matricule", value: (worker as any).matricule },
-          { label: "Date", value: data.sortie_date },
-          { label: "Nom Complet", value: worker.full_name },
-          { label: "Heure", value: data.sortie_time },
-          { label: "Poste", value: worker.position },
-          { label: "Motif", value: data.reason },
-          { label: "Département", value: worker.department },
-          { label: "Destination", value: data.destination },
-        ]} />
-        <VisaSection validationStatus={validationStatus} />
-        <DocFooter />
-      </div>
-    ),
-
-    bon_rentree: (
-      <div style={pageStyle}>
-        <DocHeader title="BON D AUTORISATION" subtitle="Entrée" />
-        <InfoGrid items={[
-          { label: "Matricule", value: (worker as any).matricule },
-          { label: "Date", value: data.rentree_date },
-          { label: "Nom Complet", value: worker.full_name },
-          { label: "Heure", value: data.rentree_time },
-          { label: "Poste", value: worker.position },
-          { label: "Motif", value: data.absence_reason },
-          { label: "Département", value: worker.department },
-          { label: "Début d'absence", value: data.absence_start },
-        ]} />
-        {data.notes && (
-          <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>Observations : <strong>{data.notes}</strong></p>
-        )}
+        <InfoGrid items={sortieItems} />
         <VisaSection validationStatus={validationStatus} />
         <DocFooter />
       </div>

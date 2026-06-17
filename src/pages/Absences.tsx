@@ -7,11 +7,13 @@ import { getWorkers, getAbsences, createAbsence, updateAbsence, deleteAbsence, t
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, CalendarX, Trash2, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
+import WorkerAutocomplete from "@/components/WorkerAutocomplete";
+import { OBSERVATION_LIST_CHOICE, OBSERVATION_TYPE_LABEL, OBSERVATION_TYPE_STYLE, findObservation } from "@/data/observations";
+import { cn } from "@/lib/utils";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -95,22 +97,38 @@ export default function Absences() {
             <div className="space-y-4 pt-2">
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
-                <Select value={workerId} onValueChange={setWorkerId} disabled={!!editing}>
-                  <SelectTrigger className="h-11"><SelectValue placeholder="Sélectionner un employé" /></SelectTrigger>
-                  <SelectContent>
-                    {workers?.map((w) => (
-                      <SelectItem key={w.id} value={w.id}>{w.full_name} {w.matricule ? `(#${w.matricule})` : ""}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
               </div>
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date *</Label>
                 <DateInput value={date} onChange={(e) => setDate(e.target.value)} className="h-11" />
               </div>
               <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Motif</Label>
-                <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Raison de l'absence..." rows={3} />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Motif *</Label>
+                <Select value={reason} onValueChange={setReason}>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="-- Choisir une observation --" /></SelectTrigger>
+                  <SelectContent>
+                    {OBSERVATION_LIST_CHOICE.map((o) => (
+                      <SelectItem key={o.observation} value={o.observation}>{o.observation}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(() => {
+                  const obs = findObservation(reason);
+                  if (!obs) return null;
+                  const style = OBSERVATION_TYPE_STYLE[obs.type];
+                  return (
+                    <div className={cn("mt-2 rounded-lg border px-3 py-2.5 flex items-center justify-between gap-3", style.block)}>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className={cn("w-2.5 h-2.5 rounded-full", style.dot)} />
+                        <span className="font-semibold">{obs.observation}</span>
+                      </div>
+                      <span className={cn("text-xs font-bold uppercase tracking-wide rounded-full border px-2.5 py-0.5", style.badge)}>
+                        {obs.type} · {OBSERVATION_TYPE_LABEL[obs.type]}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
             <DialogFooter>
@@ -124,15 +142,16 @@ export default function Absences() {
       {/* Filters */}
       <div className="bg-card border rounded-xl p-4 flex flex-wrap items-end gap-3">
         <Filter className="w-4 h-4 text-muted-foreground mb-2.5" />
-        <div>
+        <div className="w-[220px]">
           <Label className="text-xs text-muted-foreground mb-1 block">Employé</Label>
-          <Select value={filterWorker} onValueChange={setFilterWorker}>
-            <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              {workers?.map((w) => <SelectItem key={w.id} value={w.id}>{w.full_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <WorkerAutocomplete
+            workers={workers}
+            value={filterWorker}
+            onChange={setFilterWorker}
+            includeAll
+            allLabel="Tous"
+            className="h-9"
+          />
         </div>
         <div>
           <Label className="text-xs text-muted-foreground mb-1 block">Du</Label>

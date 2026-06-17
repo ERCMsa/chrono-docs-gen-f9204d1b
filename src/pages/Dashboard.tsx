@@ -1,13 +1,12 @@
 import { formatDateFR } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkers, getDocuments, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
-import { Users, FileText, LogOut, LogIn, AlertTriangle, FilePlus } from "lucide-react";
+import { Users, FileText, LogOut, AlertTriangle, FilePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const statCards = [
   { key: "contract", icon: FilePlus, color: "bg-primary" },
   { key: "bon_sortie", icon: LogOut, color: "bg-warning" },
-  { key: "bon_rentree", icon: LogIn, color: "bg-success" },
   { key: "avertissement", icon: AlertTriangle, color: "bg-destructive" },
 ] as const;
 
@@ -27,7 +26,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Vue d'ensemble de votre gestion documentaire</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-5 border shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-info/10">
@@ -70,9 +69,9 @@ export default function Dashboard() {
               <LogOut className="w-6 h-6 mx-auto mb-2 text-warning" />
               <span className="text-sm font-medium">Bon de sortie</span>
             </Link>
-            <Link to="/generate/bon_rentree" className="p-4 rounded-lg border hover:border-success/50 hover:bg-success/5 transition-all text-center">
-              <LogIn className="w-6 h-6 mx-auto mb-2 text-success" />
-              <span className="text-sm font-medium">Bon de rentrée</span>
+            <Link to="/generate/avertissement" className="p-4 rounded-lg border hover:border-destructive/50 hover:bg-destructive/5 transition-all text-center">
+              <AlertTriangle className="w-6 h-6 mx-auto mb-2 text-destructive" />
+              <span className="text-sm font-medium">Avertissement</span>
             </Link>
           </div>
         </div>
