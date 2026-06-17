@@ -26,7 +26,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Vue d'ensemble de votre gestion documentaire</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-5 border shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-info/10">
