@@ -503,6 +503,22 @@ export default function GenerateDocument() {
                   )}
                 </div>
               ))}
+              {docType === "bon_sortie" && !!formData.sortie_time && (
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                    Heure de rentrée
+                  </Label>
+                  <Input
+                    type="time"
+                    value={formData.rentree_time ?? ""}
+                    onChange={(e) => setFormData((p) => ({ ...p, rentree_time: e.target.value }))}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Affiché car l'employé est sorti — renseignez l'heure de retour.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 pt-2 border-t border-border">
               <Button onClick={() => saveMutation.mutate()} disabled={!workerId || saveMutation.isPending} className="flex-1">
