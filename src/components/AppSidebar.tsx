@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Users, LayoutDashboard, LogOut, AlertTriangle, FilePlus, BarChart3, FileText, X, Wallet, CalendarX, CalendarRange, Shield, KeyRound } from "lucide-react";
+import { Users, LayoutDashboard, LogOut, AlertTriangle, FilePlus, BarChart3, FileText, X, Wallet, CalendarX, CalendarRange, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoErcm from "@/assets/logo-ercm.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,7 +28,7 @@ const navItems: NavItem[] = [
   { to: "/absences", label: "Absences", icon: CalendarX, module: "leave" },
   { to: "/conges", label: "Congés", icon: CalendarRange, module: "leave" },
   { to: "/admin/permissions", label: "Permissions", icon: Shield, adminOnly: true },
-  { to: "/admin/api-keys", label: "Clés API", icon: KeyRound, adminOnly: true },
+  
 ];
 
 interface AppSidebarProps {
