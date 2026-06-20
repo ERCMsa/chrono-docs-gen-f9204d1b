@@ -20,7 +20,7 @@ import AcompteView from "./pages/AcompteView";
 import Absences from "./pages/Absences";
 import Conges from "./pages/Conges";
 import AdminPermissions from "./pages/AdminPermissions";
-import AdminApiKeys from "./pages/AdminApiKeys";
+
 
 const queryClient = new QueryClient();
 
@@ -53,7 +53,7 @@ const App = () => (
               <Route path="/absences" element={<PrivateRoute module="leave"><Absences /></PrivateRoute>} />
               <Route path="/conges" element={<PrivateRoute module="leave"><Conges /></PrivateRoute>} />
               <Route path="/admin/permissions" element={<PrivateRoute requireAdmin><AdminPermissions /></PrivateRoute>} />
-              <Route path="/admin/api-keys" element={<PrivateRoute requireAdmin><AdminApiKeys /></PrivateRoute>} />
+              
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
