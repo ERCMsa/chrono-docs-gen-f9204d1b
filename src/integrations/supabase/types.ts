@@ -93,6 +93,48 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          label: string
+          last_used_at: string | null
+          revoked_at: string | null
+          scopes: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          label: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conges: {
         Row: {
           conge_type: string
