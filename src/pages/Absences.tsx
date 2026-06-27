@@ -25,8 +25,7 @@ export default function Absences() {
   const [date, setDate] = useState(todayStr());
   const [reason, setReason] = useState("");
   const [filterWorker, setFilterWorker] = useState("all");
-  const [filterFrom, setFilterFrom] = useState("");
-  const [filterTo, setFilterTo] = useState("");
+  const [filterMonth, setFilterMonth] = useState(todayStr().slice(0, 7));
 
   const { data: workers } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
   const { data: absences, isLoading } = useQuery({ queryKey: ["absences"], queryFn: () => getAbsences() });
