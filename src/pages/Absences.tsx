@@ -25,8 +25,7 @@ export default function Absences() {
   const [date, setDate] = useState(todayStr());
   const [reason, setReason] = useState("");
   const [filterWorker, setFilterWorker] = useState("all");
-  const [filterFrom, setFilterFrom] = useState("");
-  const [filterTo, setFilterTo] = useState("");
+  const [filterMonth, setFilterMonth] = useState(todayStr().slice(0, 7));
 
   const { data: workers } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
   const { data: absences, isLoading } = useQuery({ queryKey: ["absences"], queryFn: () => getAbsences() });
@@ -75,11 +74,10 @@ export default function Absences() {
     if (!absences) return [];
     return absences.filter((a) => {
       if (filterWorker !== "all" && a.worker_id !== filterWorker) return false;
-      if (filterFrom && a.absence_date < filterFrom) return false;
-      if (filterTo && a.absence_date > filterTo) return false;
+      if (filterMonth && a.absence_date.slice(0, 7) !== filterMonth) return false;
       return true;
     });
-  }, [absences, filterWorker, filterFrom, filterTo]);
+  }, [absences, filterWorker, filterMonth]);
 
   return (
     <div className="space-y-6">
@@ -154,12 +152,8 @@ export default function Absences() {
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Du</Label>
-          <DateInput value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} className="h-9 w-[150px]" />
-        </div>
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Au</Label>
-          <DateInput value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="h-9 w-[150px]" />
+          <Label className="text-xs text-muted-foreground mb-1 block">Mois</Label>
+          <Input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="h-9 w-[170px]" />
         </div>
         <div className="ml-auto text-sm text-muted-foreground">
           Total : <span className="font-semibold text-foreground">{filtered.length}</span>
