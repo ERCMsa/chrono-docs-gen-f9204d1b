@@ -74,11 +74,10 @@ export default function Absences() {
     if (!absences) return [];
     return absences.filter((a) => {
       if (filterWorker !== "all" && a.worker_id !== filterWorker) return false;
-      if (filterFrom && a.absence_date < filterFrom) return false;
-      if (filterTo && a.absence_date > filterTo) return false;
+      if (filterMonth && a.absence_date.slice(0, 7) !== filterMonth) return false;
       return true;
     });
-  }, [absences, filterWorker, filterFrom, filterTo]);
+  }, [absences, filterWorker, filterMonth]);
 
   return (
     <div className="space-y-6">
