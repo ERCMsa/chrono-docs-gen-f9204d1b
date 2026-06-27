@@ -179,9 +179,16 @@ export type AbsenceWithWorker = Absence & {
   workers?: { full_name: string; matricule: string | null; department: string | null } | null;
 };
 
-export async function getAbsences(workerId?: string) {
+export async function getAbsences(workerId?: string, month?: string) {
   let q = (supabase as any).from("absences").select("*, workers(full_name, matricule, department)").order("absence_date", { ascending: false });
   if (workerId) q = q.eq("worker_id", workerId);
+  if (month && /^\d{4}-\d{2}$/.test(month)) {
+    const [y, m] = month.split("-").map(Number);
+    const start = `${month}-01`;
+    const endDate = new Date(y, m, 1); // first day of next month
+    const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-01`;
+    q = q.gte("absence_date", start).lt("absence_date", end);
+  }
   const { data, error } = await q;
   if (error) throw error;
   return data as AbsenceWithWorker[];

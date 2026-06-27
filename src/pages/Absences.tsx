@@ -28,7 +28,7 @@ export default function Absences() {
   const [filterMonth, setFilterMonth] = useState(todayStr().slice(0, 7));
 
   const { data: workers } = useQuery({ queryKey: ["workers"], queryFn: getWorkers });
-  const { data: absences, isLoading } = useQuery({ queryKey: ["absences"], queryFn: () => getAbsences() });
+  const { data: absences, isLoading } = useQuery({ queryKey: ["absences", filterMonth], queryFn: () => getAbsences(undefined, filterMonth) });
 
   const reset = () => {
     setEditing(null); setWorkerId(""); setDate(todayStr()); setReason("");
