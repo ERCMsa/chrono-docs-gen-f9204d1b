@@ -235,7 +235,7 @@ export default function GenerateDocument() {
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
   const [lang, setLang] = useState<"ar" | "fr">("ar");
-  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(defaultLogo);
   const [showAvenant, setShowAvenant] = useState(false);
   const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
   const avenantRef = useRef<HTMLDivElement>(null);
