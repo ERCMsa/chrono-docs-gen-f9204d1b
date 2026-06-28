@@ -349,8 +349,8 @@ export default function GenerateDocument() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{DOCUMENT_TYPES[docType].label}</h1>
-          <p className="text-muted-foreground mt-1">Remplissez les informations pour générer le document</p>
+          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? "Modifier — " : ""}{DOCUMENT_TYPES[docType].label}</h1>
+          <p className="text-muted-foreground mt-1">{isEdit ? "Modifiez les informations puis enregistrez les changements" : "Remplissez les informations pour générer le document"}</p>
         </div>
         {isContract && (
           <div className="flex flex-wrap items-center gap-2">
