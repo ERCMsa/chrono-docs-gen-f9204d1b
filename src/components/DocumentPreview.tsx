@@ -1,7 +1,6 @@
 import type { Worker } from "@/lib/supabase-helpers";
 import logoErcm from "@/assets/logo-ercm.png";
 import ContractPreview from "./ContractPreview"
-import defaultLogo from "@/assets/logo-ercm.png";
 
 interface Props {
   type: "contract" | "bon_sortie" | "avertissement";
