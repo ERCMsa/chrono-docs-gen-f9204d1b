@@ -21,6 +21,7 @@ import AvenantPreview, { AvenantData, EMPTY_AVENANT } from "@/components/Avenant
 import { WILAYAS_DATA, getCommunesByWilaya } from "@/data/wilayas";
 import { DUREE_OPTIONS, dureeArabicLabel, computeContractEnd } from "@/lib/contract-helpers";
 import ContractsImportExport from "@/components/ContractsImportExport";
+import defaultLogo from "@/assets/logo-ercm.png";
 
 type DocType = keyof typeof DOCUMENT_TYPES;
 
