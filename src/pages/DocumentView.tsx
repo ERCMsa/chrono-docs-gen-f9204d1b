@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DOCUMENT_TYPES, validateDocument } from "@/lib/supabase-helpers";
 import { exportToPdf } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, Printer, CheckCircle, Shield, AlertCircle } from "lucide-react";
+import { Download, ArrowLeft, Printer, CheckCircle, Shield, AlertCircle, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -80,6 +80,11 @@ export default function DocumentView() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link to={`/generate/${docType}/${doc.id}`}>
+            <Button variant="outline" size="sm">
+              <Pencil className="w-4 h-4 mr-2" />Modifier
+            </Button>
+          </Link>
           <Button onClick={() => window.print()} variant="outline" size="sm">
             <Printer className="w-4 h-4 mr-2" />Imprimer
           </Button>

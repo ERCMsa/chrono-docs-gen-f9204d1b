@@ -2,7 +2,8 @@ import { DateInput } from "@/components/ui/date-input";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWorkers, createDocument, createWorker, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
+import { getWorkers, createDocument, updateDocument, createWorker, DOCUMENT_TYPES } from "@/lib/supabase-helpers";
+import { supabase } from "@/integrations/supabase/client";
 import { exportToPdf } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -224,10 +225,11 @@ function ContractForm({ formData, setFormData, worker }: {
 }
 
 export default function GenerateDocument() {
-  const { type } = useParams<{ type: string }>();
+  const { type, id: editId } = useParams<{ type: string; id?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const docType = type as DocType;
+  const isEdit = !!editId;
 
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
@@ -294,17 +296,40 @@ export default function GenerateDocument() {
 
   const isContract = docType === "contract";
 
+  // Load existing document when editing
+  useEffect(() => {
+    if (!editId) return;
+    (async () => {
+      const { data, error } = await supabase.from("documents").select("*").eq("id", editId).single();
+      if (error || !data) { toast.error("Document introuvable"); return; }
+      const content = (data.content || {}) as Record<string, any>;
+      const flat: Record<string, string> = {};
+      for (const [k, v] of Object.entries(content)) {
+        if (k === "worker") continue;
+        if (typeof v === "string") flat[k] = v;
+      }
+      setFormData((p) => ({ ...p, ...flat }));
+      if (data.worker_id) setWorkerId(data.worker_id);
+    })();
+  }, [editId]);
+
   const saveMutation = useMutation({
     mutationFn: () =>
-      createDocument({
-        worker_id: workerId,
-        document_type: docType,
-        title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-        content: { ...formData, worker: selectedWorker },
-      }),
+      isEdit
+        ? updateDocument(editId!, {
+            title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
+            content: { ...formData, worker: selectedWorker },
+          })
+        : createDocument({
+            worker_id: workerId,
+            document_type: docType,
+            title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
+            content: { ...formData, worker: selectedWorker },
+          }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
-      toast.success("Document sauvegardé");
+      if (isEdit) queryClient.invalidateQueries({ queryKey: ["document", editId] });
+      toast.success(isEdit ? "Document mis à jour" : "Document sauvegardé");
       navigate(`/documents/${data.id}`);
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
@@ -324,8 +349,8 @@ export default function GenerateDocument() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{DOCUMENT_TYPES[docType].label}</h1>
-          <p className="text-muted-foreground mt-1">Remplissez les informations pour générer le document</p>
+          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? "Modifier — " : ""}{DOCUMENT_TYPES[docType].label}</h1>
+          <p className="text-muted-foreground mt-1">{isEdit ? "Modifiez les informations puis enregistrez les changements" : "Remplissez les informations pour générer le document"}</p>
         </div>
         {isContract && (
           <div className="flex flex-wrap items-center gap-2">
