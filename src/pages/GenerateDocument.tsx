@@ -21,6 +21,7 @@ import AvenantPreview, { AvenantData, EMPTY_AVENANT } from "@/components/Avenant
 import { WILAYAS_DATA, getCommunesByWilaya } from "@/data/wilayas";
 import { DUREE_OPTIONS, dureeArabicLabel, computeContractEnd } from "@/lib/contract-helpers";
 import ContractsImportExport from "@/components/ContractsImportExport";
+import defaultLogo from "@/assets/logo-ercm.png";
 
 type DocType = keyof typeof DOCUMENT_TYPES;
 
@@ -234,7 +235,7 @@ export default function GenerateDocument() {
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
   const [lang, setLang] = useState<"ar" | "fr">("ar");
-  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(defaultLogo);
   const [showAvenant, setShowAvenant] = useState(false);
   const [avenant, setAvenant] = useState<AvenantData>({ ...EMPTY_AVENANT });
   const avenantRef = useRef<HTMLDivElement>(null);
@@ -422,15 +423,18 @@ export default function GenerateDocument() {
         /* Contract: full-width form then full-width preview */
         <div className="space-y-6">
           <div className="bg-card border rounded-xl p-6 space-y-6">
-            {/* Lang switch + Logo */}
+            {/* Lang switch */}
             <div className="flex flex-wrap items-end gap-4 justify-between border-b border-border pb-4">
               <div className="flex gap-2">
                 <Button type="button" variant={lang === "ar" ? "default" : "outline"} size="sm" onClick={() => setLang("ar")}>عربي</Button>
                 <Button type="button" variant={lang === "fr" ? "default" : "outline"} size="sm" onClick={() => setLang("fr")}>Français</Button>
               </div>
-              <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Logo (optionnel)</Label>
-                <Input type="file" accept="image/*" onChange={handleLogoUpload} className="h-10 max-w-xs" />
+              <div className="flex items-center gap-3">
+                <img src={defaultLogo} alt="Logo ERCM" className="h-12 w-auto" />
+                <div>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Remplacer le logo (optionnel)</Label>
+                  <Input type="file" accept="image/*" onChange={handleLogoUpload} className="h-10 max-w-xs" />
+                </div>
               </div>
             </div>
 
