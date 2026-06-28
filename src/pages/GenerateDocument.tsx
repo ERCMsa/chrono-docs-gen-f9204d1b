@@ -225,10 +225,11 @@ function ContractForm({ formData, setFormData, worker }: {
 }
 
 export default function GenerateDocument() {
-  const { type } = useParams<{ type: string }>();
+  const { type, id: editId } = useParams<{ type: string; id?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const docType = type as DocType;
+  const isEdit = !!editId;
 
   const [workerId, setWorkerId] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>(() => getDefaultValues(docType));
