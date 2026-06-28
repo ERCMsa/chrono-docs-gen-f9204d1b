@@ -47,6 +47,7 @@ const App = () => (
               
               <Route path="/documents/:id" element={<PrivateRoute module="documents"><DocumentView /></PrivateRoute>} />
               <Route path="/generate/:type" element={<PrivateRoute module="documents"><GenerateDocument /></PrivateRoute>} />
+              <Route path="/generate/:type/:id" element={<PrivateRoute module="documents"><GenerateDocument /></PrivateRoute>} />
               <Route path="/statistics" element={<PrivateRoute module="reports"><Statistics /></PrivateRoute>} />
               <Route path="/acomptes" element={<PrivateRoute module="payroll"><Acomptes /></PrivateRoute>} />
               <Route path="/acomptes/:id" element={<PrivateRoute module="payroll"><AcompteView /></PrivateRoute>} />
