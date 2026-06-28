@@ -74,6 +74,12 @@ export async function createDocument(doc: DocumentInsert) {
   return data;
 }
 
+export async function updateDocument(id: string, doc: Partial<DocumentInsert>) {
+  const { data, error } = await supabase.from("documents").update(doc).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteDocument(id: string) {
   const { error } = await supabase.from("documents").delete().eq("id", id);
   if (error) throw error;
