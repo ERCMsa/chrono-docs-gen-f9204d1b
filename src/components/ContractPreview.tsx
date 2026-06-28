@@ -50,13 +50,12 @@ export default function ContractPreview({ worker, data, lang = "ar", logoDataUrl
       {/* Logo */}
       {logoDataUrl && (
         <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <img src={logoDataUrl} alt="Logo" style={{ maxHeight: 80 }} />
+          <img src={logoDataUrl} alt="Logo" style={{ maxHeight: 80, display: "block", margin: "0 auto" }} />
         </div>
       )}
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: isAr ? 30 : 24, borderBottom: "2px solid black", paddingBottom: 8 }}>
-        <p style={{ fontWeight: "bold", fontSize: "18pt", margin: 0 }}>ERCMsa</p>
         <p style={{ margin: 0, fontSize: "11pt" }}>Etude réalisation construction métallique salhi adel</p>
         <p style={{ fontWeight: "bold", fontSize: "20pt", margin: "10px 0", textDecoration: "underline" }}>
           {isAr ? "عقد عمل لمدة محددة" : "CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE"}
