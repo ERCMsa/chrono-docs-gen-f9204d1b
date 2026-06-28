@@ -80,6 +80,11 @@ export default function DocumentView() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link to={`/generate/${docType}/${doc.id}`}>
+            <Button variant="outline" size="sm">
+              <Pencil className="w-4 h-4 mr-2" />Modifier
+            </Button>
+          </Link>
           <Button onClick={() => window.print()} variant="outline" size="sm">
             <Printer className="w-4 h-4 mr-2" />Imprimer
           </Button>
