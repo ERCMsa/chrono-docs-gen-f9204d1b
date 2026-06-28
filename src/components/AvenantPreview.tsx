@@ -62,12 +62,11 @@ export default function AvenantPreview({ worker, avenant, contractData, logoData
     <div style={pageStyle}>
       {logoDataUrl && (
         <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <img src={logoDataUrl} alt="Logo" style={{ maxHeight: 80 }} />
+          <img src={logoDataUrl} alt="Logo" style={{ maxHeight: 80, display: "block", margin: "0 auto" }} />
         </div>
       )}
 
       <div style={{ textAlign: "center", marginBottom: 24, borderBottom: "2px solid black", paddingBottom: 8 }}>
-        <p style={{ fontWeight: "bold", fontSize: "18pt", margin: 0 }}>ERCMsa</p>
         <p style={{ margin: 0, fontSize: "11pt" }}>Etude réalisation construction métallique salhi adel</p>
         <p style={{ fontWeight: "bold", fontSize: "20pt", margin: "10px 0", textDecoration: "underline", color: "#cc0000" }}>
           ملحق رقم <D value={avenant.numAvenant} /> لعقد العمل
