@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DOCUMENT_TYPES, validateDocument } from "@/lib/supabase-helpers";
 import { exportToPdf } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, Printer, CheckCircle, Shield, AlertCircle } from "lucide-react";
+import { Download, ArrowLeft, Printer, CheckCircle, Shield, AlertCircle, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
