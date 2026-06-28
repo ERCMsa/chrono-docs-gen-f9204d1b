@@ -296,17 +296,40 @@ export default function GenerateDocument() {
 
   const isContract = docType === "contract";
 
+  // Load existing document when editing
+  useEffect(() => {
+    if (!editId) return;
+    (async () => {
+      const { data, error } = await supabase.from("documents").select("*").eq("id", editId).single();
+      if (error || !data) { toast.error("Document introuvable"); return; }
+      const content = (data.content || {}) as Record<string, any>;
+      const flat: Record<string, string> = {};
+      for (const [k, v] of Object.entries(content)) {
+        if (k === "worker") continue;
+        if (typeof v === "string") flat[k] = v;
+      }
+      setFormData((p) => ({ ...p, ...flat }));
+      if (data.worker_id) setWorkerId(data.worker_id);
+    })();
+  }, [editId]);
+
   const saveMutation = useMutation({
     mutationFn: () =>
-      createDocument({
-        worker_id: workerId,
-        document_type: docType,
-        title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-        content: { ...formData, worker: selectedWorker },
-      }),
+      isEdit
+        ? updateDocument(editId!, {
+            title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
+            content: { ...formData, worker: selectedWorker },
+          })
+        : createDocument({
+            worker_id: workerId,
+            document_type: docType,
+            title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
+            content: { ...formData, worker: selectedWorker },
+          }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
-      toast.success("Document sauvegardé");
+      if (isEdit) queryClient.invalidateQueries({ queryKey: ["document", editId] });
+      toast.success(isEdit ? "Document mis à jour" : "Document sauvegardé");
       navigate(`/documents/${data.id}`);
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
