@@ -306,13 +306,18 @@ export default function GenerateDocument() {
       const content = (data.content || {}) as Record<string, any>;
       const flat: Record<string, string> = {};
       for (const [k, v] of Object.entries(content)) {
-        if (k === "worker") continue;
+        if (k === "worker" || k === "avenant") continue;
         if (typeof v === "string") flat[k] = v;
       }
       setFormData((p) => ({ ...p, ...flat }));
       if (data.worker_id) setWorkerId(data.worker_id);
+      if (content.avenant && typeof content.avenant === "object") {
+        setAvenant({ ...EMPTY_AVENANT, ...content.avenant });
+        setShowAvenant(true);
+      }
     })();
   }, [editId]);
+
 
   const saveMutation = useMutation({
     mutationFn: () =>
