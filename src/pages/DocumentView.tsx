@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import DocumentPreview from "@/components/DocumentPreview";
+import AvenantPreview, { EMPTY_AVENANT, type AvenantData } from "@/components/AvenantPreview";
+import logoErcm from "@/assets/logo-ercm.png";
+
 import type { Json } from "@/integrations/supabase/types";
 
 export default function DocumentView() {
