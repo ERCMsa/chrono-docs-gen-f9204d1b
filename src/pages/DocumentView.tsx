@@ -67,10 +67,28 @@ export default function DocumentView() {
   }
 
   const isBon = docType === "bon_sortie";
+  const isContract = docType === "contract";
   const isValidatedResp = doc.validated_by_responsible;
   const isValidatedRh = doc.validated_by_rh;
 
+  const rawAvenant = (content as any).avenant;
+  const avenantData: AvenantData | null =
+    isContract && rawAvenant && typeof rawAvenant === "object"
+      ? { ...EMPTY_AVENANT, ...(rawAvenant as Partial<AvenantData>) }
+      : null;
+
+  const printAvenant = () => {
+    document.body.classList.add("print-avenant");
+    const cleanup = () => {
+      document.body.classList.remove("print-avenant");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    setTimeout(() => window.print(), 50);
+  };
+
   const displayName = authUser?.full_name || authUser?.username || "—";
+
 
   return (
     <div className="space-y-6">
