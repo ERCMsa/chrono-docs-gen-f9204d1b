@@ -130,6 +130,24 @@
     padding: 0;
     box-shadow: none;
   }
+  /* When printing avenant only, hide contract and show avenant */
+  body.print-avenant #document-preview,
+  body.print-avenant #document-preview * {
+    visibility: hidden !important;
+  }
+  body.print-avenant #avenant-preview,
+  body.print-avenant #avenant-preview * {
+    visibility: visible !important;
+  }
+  body.print-avenant #avenant-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
   /* Hide VALIDÉ watermark stamps when printing */
   #document-preview [style*="VALIDÉ"],
   .validation-stamp {
@@ -137,3 +155,4 @@
     visibility: hidden !important;
   }
 }
+

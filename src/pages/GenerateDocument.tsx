@@ -306,27 +306,34 @@ export default function GenerateDocument() {
       const content = (data.content || {}) as Record<string, any>;
       const flat: Record<string, string> = {};
       for (const [k, v] of Object.entries(content)) {
-        if (k === "worker") continue;
+        if (k === "worker" || k === "avenant") continue;
         if (typeof v === "string") flat[k] = v;
       }
       setFormData((p) => ({ ...p, ...flat }));
       if (data.worker_id) setWorkerId(data.worker_id);
+      if (content.avenant && typeof content.avenant === "object") {
+        setAvenant({ ...EMPTY_AVENANT, ...content.avenant });
+        setShowAvenant(true);
+      }
     })();
   }, [editId]);
 
+
   const saveMutation = useMutation({
-    mutationFn: () =>
-      isEdit
+    mutationFn: () => {
+      const avenantPayload = (isContract && showAvenant ? { ...avenant } : null) as any;
+      return isEdit
         ? updateDocument(editId!, {
             title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-            content: { ...formData, worker: selectedWorker },
+            content: { ...formData, worker: selectedWorker, avenant: avenantPayload },
           })
         : createDocument({
             worker_id: workerId,
             document_type: docType,
             title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-            content: { ...formData, worker: selectedWorker },
-          }),
+            content: { ...formData, worker: selectedWorker, avenant: avenantPayload },
+          });
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
       if (isEdit) queryClient.invalidateQueries({ queryKey: ["document", editId] });
@@ -335,6 +342,7 @@ export default function GenerateDocument() {
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
+
 
   if (!docType || !DOCUMENT_TYPES[docType]) {
     return <p className="text-destructive">Type de document invalide</p>;
@@ -495,10 +503,11 @@ export default function GenerateDocument() {
           )}
 
           {selectedWorker && showAvenant && (
-            <div ref={avenantRef}>
+            <div ref={avenantRef} id="avenant-preview">
               <AvenantPreview worker={selectedWorker} avenant={avenant} contractData={formData} logoDataUrl={logoDataUrl} />
             </div>
           )}
+
         </div>
       ) : (
         /* Other doc types: side by side */

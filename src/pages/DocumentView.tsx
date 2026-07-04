@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import DocumentPreview from "@/components/DocumentPreview";
+import AvenantPreview, { EMPTY_AVENANT, type AvenantData } from "@/components/AvenantPreview";
+import logoErcm from "@/assets/logo-ercm.png";
+
 import type { Json } from "@/integrations/supabase/types";
 
 export default function DocumentView() {
@@ -64,10 +67,28 @@ export default function DocumentView() {
   }
 
   const isBon = docType === "bon_sortie";
+  const isContract = docType === "contract";
   const isValidatedResp = doc.validated_by_responsible;
   const isValidatedRh = doc.validated_by_rh;
 
+  const rawAvenant = (content as any).avenant;
+  const avenantData: AvenantData | null =
+    isContract && rawAvenant && typeof rawAvenant === "object"
+      ? { ...EMPTY_AVENANT, ...(rawAvenant as Partial<AvenantData>) }
+      : null;
+
+  const printAvenant = () => {
+    document.body.classList.add("print-avenant");
+    const cleanup = () => {
+      document.body.classList.remove("print-avenant");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    setTimeout(() => window.print(), 50);
+  };
+
   const displayName = authUser?.full_name || authUser?.username || "—";
+
 
   return (
     <div className="space-y-6">
@@ -175,6 +196,31 @@ export default function DocumentView() {
           } : undefined}
         />
       </div>
+
+      {avenantData && worker && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3 border-t pt-6">
+            <h2 className="text-lg font-semibold">Avenant nº {avenantData.numAvenant}</h2>
+            <div className="flex gap-2">
+              <Button onClick={printAvenant} variant="outline" size="sm">
+                <Printer className="w-4 h-4 mr-2" />Imprimer l'avenant
+              </Button>
+              <Button onClick={() => exportToPdf("avenant-preview", `Avenant_${avenantData.numAvenant}_${worker.full_name}`)} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />PDF Avenant
+              </Button>
+            </div>
+          </div>
+          <div id="avenant-preview">
+            <AvenantPreview
+              worker={worker}
+              avenant={avenantData}
+              contractData={formData}
+              logoDataUrl={formData.logoDataUrl || logoErcm}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
