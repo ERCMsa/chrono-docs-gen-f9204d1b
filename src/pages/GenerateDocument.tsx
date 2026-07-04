@@ -503,10 +503,11 @@ export default function GenerateDocument() {
           )}
 
           {selectedWorker && showAvenant && (
-            <div ref={avenantRef}>
+            <div ref={avenantRef} id="avenant-preview">
               <AvenantPreview worker={selectedWorker} avenant={avenant} contractData={formData} logoDataUrl={logoDataUrl} />
             </div>
           )}
+
         </div>
       ) : (
         /* Other doc types: side by side */
