@@ -321,7 +321,7 @@ export default function GenerateDocument() {
 
   const saveMutation = useMutation({
     mutationFn: () => {
-      const avenantPayload = isContract && showAvenant ? avenant : null;
+      const avenantPayload = (isContract && showAvenant ? { ...avenant } : null) as any;
       return isEdit
         ? updateDocument(editId!, {
             title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
