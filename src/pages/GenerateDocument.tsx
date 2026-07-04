@@ -320,18 +320,20 @@ export default function GenerateDocument() {
 
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      isEdit
+    mutationFn: () => {
+      const avenantPayload = isContract && showAvenant ? avenant : null;
+      return isEdit
         ? updateDocument(editId!, {
             title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-            content: { ...formData, worker: selectedWorker },
+            content: { ...formData, worker: selectedWorker, avenant: avenantPayload },
           })
         : createDocument({
             worker_id: workerId,
             document_type: docType,
             title: `${DOCUMENT_TYPES[docType].label} - ${selectedWorker?.full_name}`,
-            content: { ...formData, worker: selectedWorker },
-          }),
+            content: { ...formData, worker: selectedWorker, avenant: avenantPayload },
+          });
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["documents"] }); queryClient.invalidateQueries({ queryKey: ["workers-with-contract"] });
       if (isEdit) queryClient.invalidateQueries({ queryKey: ["document", editId] });
@@ -340,6 +342,7 @@ export default function GenerateDocument() {
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
+
 
   if (!docType || !DOCUMENT_TYPES[docType]) {
     return <p className="text-destructive">Type de document invalide</p>;
