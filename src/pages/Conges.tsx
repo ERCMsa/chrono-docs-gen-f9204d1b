@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  getWorkers, getConges, createConge, updateConge, deleteConge,
+  getWorkers, getConges, createConge, createCongesBulk, updateConge, deleteConge,
   congeDuration, CONGE_TYPES, type CongeType, type CongeWithWorker
 } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, CalendarRange, Trash2, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAutocomplete from "@/components/WorkerAutocomplete";
+import WorkerMultiSelect from "@/components/WorkerMultiSelect";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
