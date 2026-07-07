@@ -3,15 +3,17 @@ import { formatDateFR } from "@/lib/date-utils";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { getWorkers, getAbsences, createAbsence, updateAbsence, deleteAbsence, type AbsenceWithWorker } from "@/lib/supabase-helpers";
+import { getWorkers, getAbsences, createAbsence, createAbsencesBulk, updateAbsence, deleteAbsence, type AbsenceWithWorker } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, CalendarX, Trash2, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAutocomplete from "@/components/WorkerAutocomplete";
+import WorkerMultiSelect from "@/components/WorkerMultiSelect";
 import { OBSERVATION_LIST_CHOICE, OBSERVATION_TYPE_LABEL, OBSERVATION_TYPE_STYLE, findObservation } from "@/data/observations";
 import { cn } from "@/lib/utils";
 
