@@ -210,6 +210,17 @@ export async function createAbsence(params: { worker_id: string; absence_date: s
   return data as Absence;
 }
 
+export async function createAbsencesBulk(params: { worker_ids: string[]; absence_date: string; reason?: string }) {
+  const rows = params.worker_ids.map((wid) => ({
+    worker_id: wid,
+    absence_date: params.absence_date,
+    reason: params.reason ?? null,
+  }));
+  const { data, error } = await (supabase as any).from("absences").insert(rows).select();
+  if (error) throw error;
+  return data as Absence[];
+}
+
 export async function updateAbsence(id: string, params: { absence_date?: string; reason?: string | null }) {
   const { data, error } = await (supabase as any).from("absences").update(params).eq("id", id).select().single();
   if (error) throw error;
