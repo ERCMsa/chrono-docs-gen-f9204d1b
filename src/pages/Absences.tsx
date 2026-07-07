@@ -24,6 +24,8 @@ export default function Absences() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AbsenceWithWorker | null>(null);
   const [workerId, setWorkerId] = useState("");
+  const [multiMode, setMultiMode] = useState(false);
+  const [workerIds, setWorkerIds] = useState<string[]>([]);
   const [date, setDate] = useState(todayStr());
   const [reason, setReason] = useState("");
   const [filterWorker, setFilterWorker] = useState("all");
@@ -33,12 +35,12 @@ export default function Absences() {
   const { data: absences, isLoading } = useQuery({ queryKey: ["absences", filterMonth], queryFn: () => getAbsences(undefined, filterMonth) });
 
   const reset = () => {
-    setEditing(null); setWorkerId(""); setDate(todayStr()); setReason("");
+    setEditing(null); setWorkerId(""); setWorkerIds([]); setMultiMode(false); setDate(todayStr()); setReason("");
   };
 
   const openCreate = () => { reset(); setOpen(true); };
   const openEdit = (a: AbsenceWithWorker) => {
-    setEditing(a); setWorkerId(a.worker_id); setDate(a.absence_date); setReason(a.reason ?? ""); setOpen(true);
+    setEditing(a); setMultiMode(false); setWorkerId(a.worker_id); setDate(a.absence_date); setReason(a.reason ?? ""); setOpen(true);
   };
 
   const saveMut = useMutation({
@@ -46,12 +48,17 @@ export default function Absences() {
       if (editing) {
         return updateAbsence(editing.id, { absence_date: date, reason: reason.trim() || null });
       }
+      if (multiMode) {
+        const rows = await createAbsencesBulk({ worker_ids: workerIds, absence_date: date, reason: reason.trim() || undefined });
+        return { bulkCount: rows.length };
+      }
       return createAbsence({ worker_id: workerId, absence_date: date, reason: reason.trim() || undefined });
     },
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["absences"] });
       qc.invalidateQueries({ queryKey: ["worker-absences"] });
-      toast.success(editing ? "Absence mise à jour" : "Absence enregistrée");
+      if (res?.bulkCount) toast.success(`${res.bulkCount} absence(s) enregistrée(s)`);
+      else toast.success(editing ? "Absence mise à jour" : "Absence enregistrée");
       setOpen(false); reset();
     },
     onError: (e: any) => toast.error(e?.message ?? "Erreur"),
@@ -67,7 +74,9 @@ export default function Absences() {
   });
 
   const handleSubmit = () => {
-    if (!workerId) return toast.error("Sélectionnez un employé");
+    if (multiMode && !editing) {
+      if (workerIds.length === 0) return toast.error("Sélectionnez au moins un employé");
+    } else if (!workerId) return toast.error("Sélectionnez un employé");
     if (!date) return toast.error("Date requise");
     saveMut.mutate();
   };
