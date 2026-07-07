@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  getWorkers, getConges, createConge, updateConge, deleteConge,
+  getWorkers, getConges, createConge, createCongesBulk, updateConge, deleteConge,
   congeDuration, CONGE_TYPES, type CongeType, type CongeWithWorker
 } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, CalendarRange, Trash2, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAutocomplete from "@/components/WorkerAutocomplete";
+import WorkerMultiSelect from "@/components/WorkerMultiSelect";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -33,6 +35,8 @@ export default function Conges() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CongeWithWorker | null>(null);
   const [workerId, setWorkerId] = useState("");
+  const [multiMode, setMultiMode] = useState(false);
+  const [workerIds, setWorkerIds] = useState<string[]>([]);
   const [start, setStart] = useState(todayStr());
   const [end, setEnd] = useState(todayStr());
   const [type, setType] = useState<CongeType>("annual");
@@ -46,12 +50,13 @@ export default function Conges() {
   const { data: conges, isLoading } = useQuery({ queryKey: ["conges"], queryFn: () => getConges() });
 
   const reset = () => {
-    setEditing(null); setWorkerId(""); setStart(todayStr()); setEnd(todayStr()); setType("annual"); setReason("");
+    setEditing(null); setWorkerId(""); setWorkerIds([]); setMultiMode(false);
+    setStart(todayStr()); setEnd(todayStr()); setType("annual"); setReason("");
   };
 
   const openCreate = () => { reset(); setOpen(true); };
   const openEdit = (c: CongeWithWorker) => {
-    setEditing(c); setWorkerId(c.worker_id); setStart(c.start_date); setEnd(c.end_date);
+    setEditing(c); setMultiMode(false); setWorkerId(c.worker_id); setStart(c.start_date); setEnd(c.end_date);
     setType(c.conge_type); setReason(c.reason ?? ""); setOpen(true);
   };
 
@@ -60,12 +65,22 @@ export default function Conges() {
       if (editing) {
         return updateConge(editing.id, { start_date: start, end_date: end, conge_type: type, reason: reason.trim() || null });
       }
+      if (multiMode) {
+        const res = await createCongesBulk({ worker_ids: workerIds, start_date: start, end_date: end, conge_type: type, reason: reason.trim() || undefined });
+        return { bulk: res };
+      }
       return createConge({ worker_id: workerId, start_date: start, end_date: end, conge_type: type, reason: reason.trim() || undefined });
     },
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["conges"] });
       qc.invalidateQueries({ queryKey: ["worker-conges"] });
-      toast.success(editing ? "Congé mis à jour" : "Congé enregistré");
+      if (res?.bulk) {
+        const { success, failed } = res.bulk;
+        if (success > 0) toast.success(`${success} congé(s) enregistré(s)`);
+        if (failed.length > 0) toast.error(`${failed.length} échec(s) — ${failed[0].message}`);
+      } else {
+        toast.success(editing ? "Congé mis à jour" : "Congé enregistré");
+      }
       setOpen(false); reset();
     },
     onError: (e: any) => toast.error(e?.message ?? "Erreur"),
@@ -81,7 +96,9 @@ export default function Conges() {
   });
 
   const handleSubmit = () => {
-    if (!workerId) return toast.error("Sélectionnez un employé");
+    if (multiMode && !editing) {
+      if (workerIds.length === 0) return toast.error("Sélectionnez au moins un employé");
+    } else if (!workerId) return toast.error("Sélectionnez un employé");
     if (!start || !end) return toast.error("Dates requises");
     if (new Date(end) < new Date(start)) return toast.error("La date de fin doit être après la date de début");
     saveMut.mutate();
@@ -114,9 +131,21 @@ export default function Conges() {
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader><DialogTitle>{editing ? "Modifier le congé" : "Nouveau congé"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
+              {!editing && (
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                  <Checkbox checked={multiMode} onCheckedChange={(v) => setMultiMode(!!v)} />
+                  <span className="font-medium">Sélection multiple (plusieurs employés)</span>
+                </label>
+              )}
               <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
-                <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  {multiMode && !editing ? "Employés *" : "Employé *"}
+                </Label>
+                {multiMode && !editing ? (
+                  <WorkerMultiSelect workers={workers} value={workerIds} onChange={setWorkerIds} />
+                ) : (
+                  <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
+                )}
               </div>
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Type *</Label>

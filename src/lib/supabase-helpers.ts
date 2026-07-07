@@ -210,6 +210,17 @@ export async function createAbsence(params: { worker_id: string; absence_date: s
   return data as Absence;
 }
 
+export async function createAbsencesBulk(params: { worker_ids: string[]; absence_date: string; reason?: string }) {
+  const rows = params.worker_ids.map((wid) => ({
+    worker_id: wid,
+    absence_date: params.absence_date,
+    reason: params.reason ?? null,
+  }));
+  const { data, error } = await (supabase as any).from("absences").insert(rows).select();
+  if (error) throw error;
+  return data as Absence[];
+}
+
 export async function updateAbsence(id: string, params: { absence_date?: string; reason?: string | null }) {
   const { data, error } = await (supabase as any).from("absences").update(params).eq("id", id).select().single();
   if (error) throw error;
@@ -274,6 +285,27 @@ export async function createConge(params: { worker_id: string; start_date: strin
   }).select().single();
   if (error) throw error;
   return data as Conge;
+}
+
+export async function createCongesBulk(params: { worker_ids: string[]; start_date: string; end_date: string; conge_type: CongeType; reason?: string }): Promise<{ success: number; failed: { worker_id: string; message: string }[] }> {
+  if (new Date(params.end_date) < new Date(params.start_date)) {
+    throw new Error("La date de fin doit être après la date de début");
+  }
+  const failed: { worker_id: string; message: string }[] = [];
+  let success = 0;
+  // Insert one-by-one so per-worker overlap trigger errors don't cancel everything
+  for (const wid of params.worker_ids) {
+    const { error } = await (supabase as any).from("conges").insert({
+      worker_id: wid,
+      start_date: params.start_date,
+      end_date: params.end_date,
+      conge_type: params.conge_type,
+      reason: params.reason ?? null,
+    });
+    if (error) failed.push({ worker_id: wid, message: error.message });
+    else success++;
+  }
+  return { success, failed };
 }
 
 export async function updateConge(id: string, params: Partial<{ start_date: string; end_date: string; conge_type: CongeType; reason: string | null }>) {
