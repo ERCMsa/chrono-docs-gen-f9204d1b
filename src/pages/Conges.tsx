@@ -35,6 +35,8 @@ export default function Conges() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CongeWithWorker | null>(null);
   const [workerId, setWorkerId] = useState("");
+  const [multiMode, setMultiMode] = useState(false);
+  const [workerIds, setWorkerIds] = useState<string[]>([]);
   const [start, setStart] = useState(todayStr());
   const [end, setEnd] = useState(todayStr());
   const [type, setType] = useState<CongeType>("annual");
@@ -48,12 +50,13 @@ export default function Conges() {
   const { data: conges, isLoading } = useQuery({ queryKey: ["conges"], queryFn: () => getConges() });
 
   const reset = () => {
-    setEditing(null); setWorkerId(""); setStart(todayStr()); setEnd(todayStr()); setType("annual"); setReason("");
+    setEditing(null); setWorkerId(""); setWorkerIds([]); setMultiMode(false);
+    setStart(todayStr()); setEnd(todayStr()); setType("annual"); setReason("");
   };
 
   const openCreate = () => { reset(); setOpen(true); };
   const openEdit = (c: CongeWithWorker) => {
-    setEditing(c); setWorkerId(c.worker_id); setStart(c.start_date); setEnd(c.end_date);
+    setEditing(c); setMultiMode(false); setWorkerId(c.worker_id); setStart(c.start_date); setEnd(c.end_date);
     setType(c.conge_type); setReason(c.reason ?? ""); setOpen(true);
   };
 
@@ -62,12 +65,22 @@ export default function Conges() {
       if (editing) {
         return updateConge(editing.id, { start_date: start, end_date: end, conge_type: type, reason: reason.trim() || null });
       }
+      if (multiMode) {
+        const res = await createCongesBulk({ worker_ids: workerIds, start_date: start, end_date: end, conge_type: type, reason: reason.trim() || undefined });
+        return { bulk: res };
+      }
       return createConge({ worker_id: workerId, start_date: start, end_date: end, conge_type: type, reason: reason.trim() || undefined });
     },
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["conges"] });
       qc.invalidateQueries({ queryKey: ["worker-conges"] });
-      toast.success(editing ? "Congé mis à jour" : "Congé enregistré");
+      if (res?.bulk) {
+        const { success, failed } = res.bulk;
+        if (success > 0) toast.success(`${success} congé(s) enregistré(s)`);
+        if (failed.length > 0) toast.error(`${failed.length} échec(s) — ${failed[0].message}`);
+      } else {
+        toast.success(editing ? "Congé mis à jour" : "Congé enregistré");
+      }
       setOpen(false); reset();
     },
     onError: (e: any) => toast.error(e?.message ?? "Erreur"),
@@ -83,7 +96,9 @@ export default function Conges() {
   });
 
   const handleSubmit = () => {
-    if (!workerId) return toast.error("Sélectionnez un employé");
+    if (multiMode && !editing) {
+      if (workerIds.length === 0) return toast.error("Sélectionnez au moins un employé");
+    } else if (!workerId) return toast.error("Sélectionnez un employé");
     if (!start || !end) return toast.error("Dates requises");
     if (new Date(end) < new Date(start)) return toast.error("La date de fin doit être après la date de début");
     saveMut.mutate();
