@@ -131,9 +131,21 @@ export default function Conges() {
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader><DialogTitle>{editing ? "Modifier le congé" : "Nouveau congé"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
+              {!editing && (
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                  <Checkbox checked={multiMode} onCheckedChange={(v) => setMultiMode(!!v)} />
+                  <span className="font-medium">Sélection multiple (plusieurs employés)</span>
+                </label>
+              )}
               <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Employé *</Label>
-                <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  {multiMode && !editing ? "Employés *" : "Employé *"}
+                </Label>
+                {multiMode && !editing ? (
+                  <WorkerMultiSelect workers={workers} value={workerIds} onChange={setWorkerIds} />
+                ) : (
+                  <WorkerAutocomplete workers={workers} value={workerId} onChange={setWorkerId} disabled={!!editing} />
+                )}
               </div>
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Type *</Label>
