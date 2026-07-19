@@ -17,7 +17,11 @@ export default function Login() {
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
   if (session) {
-    const from = (location.state as any)?.from?.pathname || "/";
+    const params = new URLSearchParams(location.search);
+    const nextRaw = params.get("next");
+    // Only accept same-origin relative paths.
+    const next = nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : null;
+    const from = next || (location.state as any)?.from?.pathname || "/";
     return <Navigate to={from} replace />;
   }
 

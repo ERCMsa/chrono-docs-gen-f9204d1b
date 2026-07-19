@@ -20,6 +20,7 @@ import AcompteView from "./pages/AcompteView";
 import Absences from "./pages/Absences";
 import Conges from "./pages/Conges";
 import AdminPermissions from "./pages/AdminPermissions";
+import OAuthConsent from "./pages/OAuthConsent";
 
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route
               element={
                 <PrivateRoute>
