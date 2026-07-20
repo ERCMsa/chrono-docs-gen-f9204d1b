@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, CalendarRange, Trash2, Pencil, Filter } from "lucide-react";
+import { Plus, CalendarRange, Trash2, Pencil, Filter, FileText } from "lucide-react";
+import { generateTitreCongePdf } from "@/lib/titre-conge-pdf";
 import { toast } from "sonner";
 import WorkerAutocomplete from "@/components/WorkerAutocomplete";
 import WorkerMultiSelect from "@/components/WorkerMultiSelect";
@@ -261,6 +262,7 @@ export default function Conges() {
                     <td className="p-4 text-right font-semibold">{dur} j</td>
                     <td className="p-4 text-sm text-muted-foreground max-w-[250px] truncate">{c.reason ?? "—"}</td>
                     <td className="p-4 text-right whitespace-nowrap">
+                      <Button variant="ghost" size="sm" title="Titre de congé (PDF)" onClick={() => generateTitreCongePdf(c)}><FileText className="w-4 h-4 text-primary" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => openEdit(c)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => { if (confirm("Supprimer ce congé ?")) delMut.mutate(c.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </td>
